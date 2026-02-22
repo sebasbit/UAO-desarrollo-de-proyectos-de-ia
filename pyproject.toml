@@ -1,0 +1,53 @@
+[project]
+name = "uao-desarrollo-de-proyectos-de-ia"
+version = "0.1.0"
+description = "Proyecto final del curso Desarrollo de Proyectos de Inteligencia Artificial"
+readme = "README.md"
+license = "MIT"
+license-files = ["LICENSE"]
+authors = [
+    {name = "Alexander Calambas Ramirez", email = "alexandercalambas23@gmail.com"},
+    {name = "Angelo Parra Cortez", email = "angeloparra207@gmail.com"},
+    {name = "Oscar Portela Ospina", email = "osport726@gmail.com"},
+    {name = "Sebastian Torres Cabrera", email = "sebastian.torres0426@gmail.com"},
+]
+classifiers = [
+    "Topic :: Education",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+]
+requires-python = ">=3.13"
+dependencies = []
+
+[dependency-groups]
+dev = [
+    "pre-commit>=4.5.1",
+    "pytest>=9.0.2",
+    "ruff>=0.15.2",
+]
+
+[tool.pytest.ini_options]
+pythonpath = "src"
+testpaths = ["tests"]
+addopts = "--verbose"
+filterwarnings = [
+    "error",
+]
+
+[tool.ruff]
+src = ["src"]
+fix = false
+output-format = "full"
+
+[tool.ruff.lint]
+select = [
+    "B", # flake8-bugbear
+    "E", # pycodestyle error
+    "F", # pyflakes
+    "I", # isort
+    "UP", # pyupgrade
+    "W", # pycodestyle warning
+]
+
+[tool.ruff.lint.isort]
+force-single-line = true
+order-by-type = false
