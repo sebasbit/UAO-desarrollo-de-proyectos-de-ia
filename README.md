@@ -10,10 +10,10 @@
 
 | Nombre | Código |
 |---|---|
-| Jhojan Alexander Calambas | 22602907 |
-| Angelo Parra Cortez | — |
-| Oscar Eduardo Portela Ospina | — |
-| Sebastian Torres Cabrera | — |
+| Alexander Calambas Ramirez | 22602907 |
+| Angelo Parra Cortez | 22506988 |
+| Oscar Portela Ospina | 22507314 |
+| Sebastian Torres Cabrera | 22507322 |
 
 ---
 
