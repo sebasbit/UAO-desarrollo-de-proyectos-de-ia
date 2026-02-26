@@ -15,13 +15,43 @@ classifiers = [
     "Topic :: Education",
     "Topic :: Scientific/Engineering :: Artificial Intelligence",
 ]
-requires-python = ">=3.13"
-dependencies = []
+requires-python = ">=3.10"
+dependencies = [
+    # --- Modelo e inferencia ---
+    "torch>=2.0",
+    "transformers>=4.35",
+    "Pillow>=10.0",
+    "scikit-learn>=1.3",
+    "numpy>=1.24",
+    "joblib>=1.3",
+    # --- API y servidor ---
+    "fastapi>=0.104",
+    "uvicorn>=0.24",
+    "python-multipart>=0.0.6",
+    "jinja2>=3.1",
+]
+
+# ---------------------------------------------------------------------------
+# Configuración cross-platform de PyTorch (uv >= 0.10)
+#
+# torch-backend = "cpu" instruye a uv para instalar el build CPU-only
+# de PyTorch en todas las plataformas:
+#
+#   Mac (Apple Silicon M-series) → CPU build, coherente con producción.
+#   Windows                      → CPU-only (~500 MB menos que CUDA).
+#   Linux / Docker               → CPU-only, build de producción.
+#
+# Cada integrante ejecuta `uv sync` y obtiene el build correcto
+# sin cambiar nada manualmente.
+# ---------------------------------------------------------------------------
+[tool.uv]
+torch-backend = "cpu"
 
 [dependency-groups]
 dev = [
     "pre-commit>=4.5.1",
-    "pytest>=9.0.2",
+    "pytest>=7.0",
+    "httpx>=0.25",
     "ruff>=0.15.2",
 ]
 

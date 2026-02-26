@@ -1,0 +1,21 @@
+repos:
+  # Checks generales de higiene
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v5.0.0
+    hooks:
+      - id: trailing-whitespace        # elimina espacios al final de línea
+      - id: end-of-file-fixer          # asegura newline al final de cada archivo
+      - id: check-yaml                 # valida sintaxis de archivos YAML
+      - id: check-toml                 # valida sintaxis de pyproject.toml
+      - id: check-added-large-files    # bloquea archivos > 500 KB (protege el repo)
+        args: ["--maxkb=500"]
+      - id: check-merge-conflict       # detecta marcadores de conflicto sin resolver
+      - id: debug-statements           # detecta breakpoint() / pdb olvidados
+
+  # Ruff: linting + orden de imports
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.11.2
+    hooks:
+      - id: ruff
+        args: ["--fix"]
+      - id: ruff-format

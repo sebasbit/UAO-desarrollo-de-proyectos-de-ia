@@ -1,13 +1,48 @@
-.venv/
+# Control de versiones
+.git
+.github
+.gitignore
+
+# Entorno virtual local
+.venv
+.pixi
+
+# Cache de Python
 __pycache__/
-*.pyc
+*.py[cod]
 *.pyo
 *.pyd
-.git/
-.gitignore
+
+# IDEs
 .vscode/
 .idea/
-pytest_cache/
-.mypy_cache/
 .DS_Store
 Thumbs.db
+.history/
+
+# Tests y herramientas de desarrollo (no van en la imagen de producción)
+tests/
+scripts/
+.pre-commit-config.yaml
+
+# Dataset y artefactos de entrenamiento
+# (se montan por volumen o se descargan en runtime)
+data/
+models/*.pkl
+models/*.bin
+models/*.pt
+
+# Documentación y materiales del curso
+Documents/
+Images/
+*.md
+
+# Variables de entorno locales
+.env
+.envrc
+
+# Cache de herramientas
+.ruff_cache/
+.mypy_cache/
+.pytest_cache/
+htmlcov/
