@@ -33,7 +33,11 @@ Documento de referencia para el equipo de desarrollo. Explica la estructura del 
 
 ## 2. Configuración inicial
 
-Ejecuta estos comandos **una sola vez** después de clonar el repositorio:
+Ejecuta estos comandos **una sola vez** después de clonar el repositorio.
+
+### Mac (Apple Silicon / Intel)
+
+`make` viene preinstalado en macOS. Ejecuta directamente desde la terminal:
 
 ```bash
 # 1. Instalar todas las dependencias (detecta tu plataforma automáticamente)
@@ -45,6 +49,32 @@ make pre-commit-install
 # 3. Verificar que todo funciona
 make test
 ```
+
+### Windows
+
+`make` no está disponible en PowerShell por defecto. Hay dos opciones:
+
+**Opción A — Git Bash (recomendada)**
+
+Si tienen [Git for Windows](https://git-scm.com/) instalado, abrir **Git Bash** y usar los mismos comandos `make`:
+
+```bash
+make install
+make pre-commit-install
+make test
+```
+
+**Opción B — PowerShell / CMD (sin make)**
+
+Usar `uv` directamente como equivalente:
+
+```powershell
+uv sync                                           # equivale a make install
+uv run pre-commit install                         # equivale a make pre-commit-install
+uv run pytest tests/                              # equivale a make test
+```
+
+---
 
 Si el último comando muestra `1 passed`, el entorno está listo.
 

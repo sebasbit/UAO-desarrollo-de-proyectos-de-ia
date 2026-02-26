@@ -182,15 +182,40 @@ Sobre los embeddings se entrena un clasificador final con `scikit-learn` (Logist
 
 Este proyecto utiliza **uv** como gestor de dependencias y entornos virtuales. Requiere Python >= 3.10.
 
+### Mac (Apple Silicon / Intel)
+
+`make` viene preinstalado en macOS. Los comandos funcionan directamente desde la terminal:
+
 ```bash
-# Instalar dependencias
+make install   # instala todas las dependencias
+make start     # levanta el servidor en http://localhost:8000
+make test      # corre los tests
+make lint      # verifica calidad del código
+```
+
+### Windows
+
+`make` no está disponible en PowerShell por defecto. Hay dos opciones:
+
+**Opción A — Git Bash (recomendada)**
+
+Si tienen [Git for Windows](https://git-scm.com/) instalado, abrir **Git Bash** y usar los mismos comandos `make`:
+
+```bash
 make install
-
-# Ejecutar la aplicación
 make start
-
-# Correr los tests
 make test
+```
+
+**Opción B — PowerShell / CMD (sin make)**
+
+Usar `uv` directamente como equivalente:
+
+```powershell
+uv sync                                           # equivale a make install
+uv run uvicorn src.api.main:app --reload          # equivale a make start
+uv run pytest tests/                              # equivale a make test
+uv run ruff check src/ tests/ scripts/            # equivale a make lint
 ```
 
 ### Con Docker
