@@ -1,7 +1,7 @@
 # Triage de Soporte TI mediante Clasificación de Imágenes
 
 > Implementación con Visión Computacional, FastAPI y ejecución de modelo en CPU
-> Proyecto final — Desarrollo de Proyectos de Inteligencia Artificial
+> Proyecto final - Desarrollo de Proyectos de Inteligencia Artificial
 > Universidad Autónoma de Occidente
 
 ---
@@ -21,7 +21,7 @@
 
 En los help desks y áreas de soporte TI, el proceso de **triage inicial** es una de las actividades más repetitivas y propensas a errores. Los agentes deben leer manualmente descripciones de usuarios, interpretar capturas de pantalla y determinar el tipo de incidente para enrutarlo al equipo correcto. Este flujo es lento y susceptible a errores de enrutamiento que incrementan el **MTTR** (Mean Time To Resolution) y la carga operativa.
 
-Este proyecto propone una solución basada en **Visión por Computadora con Transformers** para automatizar ese triage: el sistema recibe una captura de pantalla de un incidente TI, la clasifica en una categoría de soporte predefinida y sugiere el equipo responsable de atenderlo — sin intervención manual.
+Este proyecto propone una solución basada en **Visión por Computadora con Transformers** para automatizar ese triage: el sistema recibe una captura de pantalla de un incidente TI, la clasifica en una categoría de soporte predefinida y sugiere el equipo responsable de atenderlo - sin intervención manual.
 
 ---
 
@@ -33,13 +33,13 @@ Desarrollar y desplegar una aplicación web y API HTTP, ejecutable en CPU, que c
 
 ## Objetivos específicos
 
-- **OE-01** — Definir el catálogo de categorías de soporte (mínimo 6) con reglas de enrutamiento por equipo responsable.
-- **OE-02** — Construir un dataset de demostración (20–50 imágenes por categoría) con capturas simuladas o públicas, garantizando ausencia de PII.
-- **OE-03** — Implementar el módulo de inferencia sobre **DeiT-Tiny** con un clasificador final ajustado a las categorías de soporte.
-- **OE-04** — Exponer la solución mediante **FastAPI**: endpoint `POST /api/predict` (Top-K con probabilidad) y `GET /health`.
-- **OE-05** — Construir una interfaz web (HTML/Jinja2) para carga de imágenes y visualización del resultado de enrutamiento.
-- **OE-06** — Incorporar pruebas automatizadas (mínimo 3) y pipeline CI en GitHub Actions para validación en cada push/PR.
-- **OE-07** — Empaquetar con **Docker** para despliegue reproducible y prueba de despliegue en DigitalOcean Droplet.
+- Definir el catálogo de categorías de soporte (mínimo 6) con reglas de enrutamiento por equipo responsable.
+- Construir un dataset de demostración (20–50 imágenes por categoría) con capturas simuladas o públicas, garantizando ausencia de PII.
+- Implementar el módulo de inferencia sobre **DeiT-Tiny** con un clasificador final ajustado a las categorías de soporte.
+- Exponer la solución mediante **FastAPI**: endpoint `POST /api/predict` (Top-K con probabilidad) y `GET /health`.
+- Construir una interfaz web (HTML/Jinja2) para carga de imágenes y visualización del resultado de enrutamiento.
+- Incorporar pruebas automatizadas (mínimo 3) y pipeline CI en GitHub Actions para validación en cada push/PR.
+- Empaquetar con **Docker** para despliegue reproducible y prueba de despliegue en DigitalOcean Droplet.
 
 ---
 
@@ -68,13 +68,13 @@ El sistema clasifica imágenes en 8 categorías con enrutamiento sugerido al equ
 |---|---|
 | Backend API | FastAPI (async) + Uvicorn (ASGI) |
 | Frontend | HTML/CSS + Jinja2 templates |
-| Modelo de IA | DeiT-Tiny — HuggingFace Transformers + PyTorch CPU |
+| Modelo de IA | DeiT-Tiny - HuggingFace Transformers + PyTorch CPU |
 | Clasificador final | scikit-learn (LogisticRegression / SVM), exportado como `.pkl` |
-| Contenerización | Docker — imagen reproducible para CPU (`python:3.11-slim`) |
+| Contenerización | Docker - imagen reproducible para CPU (`python:3.11-slim`) |
 | CI/CD | GitHub Actions (lint + tests) + GitLab Runner (deploy a DigitalOcean) |
 | Despliegue demo | DigitalOcean Droplet (Ubuntu 22.04 LTS) con Docker |
 
-### Modelo de IA — DeiT-Tiny
+### Modelo de IA - DeiT-Tiny
 
 Se utiliza **[DeiT-Tiny](https://huggingface.co/facebook/deit-tiny-patch16-224)** (Data-efficient Image Transformers, Facebook AI Research) como extractor de embeddings visuales. Arquitectura ViT con parches 16×16 px, imagen de entrada 224×224, preentrenado en ImageNet-1k (~22 MB en disco, ~200 MB en RAM).
 
@@ -89,9 +89,9 @@ Sobre los embeddings se entrena un clasificador final con `scikit-learn` (Logist
 | Método | Endpoint | Descripción |
 |---|---|---|
 | `POST` | `/api/predict` | Recibe imagen (`multipart/form-data`), retorna Top-K categorías con score y equipo sugerido |
-| `GET` | `/health` | Healthcheck — retorna `{"status": "ok"}` con HTTP 200 en < 1s |
+| `GET` | `/health` | Healthcheck - retorna `{"status": "ok"}` con HTTP 200 en < 1s |
 
-### Ejemplo de respuesta — `POST /api/predict`
+### Ejemplo de respuesta - `POST /api/predict`
 
 ```json
 {
@@ -143,7 +143,7 @@ Sobre los embeddings se entrena un clasificador final con `scikit-learn` (Logist
 ## Fuera de alcance
 
 - Resolución automatizada de incidentes (solo triage y enrutamiento).
-- Integración productiva con plataformas ITSM (ServiceNow, Jira) — solo demo.
+- Integración productiva con plataformas ITSM (ServiceNow, Jira) - solo demo.
 - Autenticación empresarial o manejo de usuarios.
 - Datos reales con información personal identificable (PII).
 - Entrenamiento a gran escala o modelos de producción de alto rendimiento.
@@ -187,17 +187,17 @@ Este proyecto utiliza **uv** como gestor de dependencias y entornos virtuales. R
 `make` viene preinstalado en macOS. Los comandos funcionan directamente desde la terminal:
 
 ```bash
-make install   # instala todas las dependencias
-make start     # levanta el servidor en http://localhost:8000
-make test      # corre los tests
-make lint      # verifica calidad del código
+make install # instala todas las dependencias
+make start # levanta el servidor en http://localhost:8000
+make test # corre los tests
+make lint # verifica calidad del código
 ```
 
 ### Windows
 
 `make` no está disponible en PowerShell por defecto. Hay dos opciones:
 
-**Opción A — Git Bash (recomendada)**
+**Opción A - Git Bash (recomendada)**
 
 Si tienen [Git for Windows](https://git-scm.com/) instalado, abrir **Git Bash** y usar los mismos comandos `make`:
 
@@ -207,15 +207,15 @@ make start
 make test
 ```
 
-**Opción B — PowerShell / CMD (sin make)**
+**Opción B - PowerShell / CMD (sin make)**
 
 Usar `uv` directamente como equivalente:
 
 ```powershell
-uv sync                                           # equivale a make install
-uv run uvicorn src.api.main:app --reload          # equivale a make start
-uv run pytest tests/                              # equivale a make test
-uv run ruff check src/ tests/ scripts/            # equivale a make lint
+uv sync # equivale a make install
+uv run uvicorn src.api.main:app --reload # equivale a make start
+uv run pytest tests/ # equivale a make test
+uv run ruff check src/ tests/ scripts/ # equivale a make lint
 ```
 
 ### Con Docker
@@ -280,4 +280,4 @@ El proyecto sigue una **metodología Ágil** con un sprint de desarrollo (26/02 
 
 ## Licencia
 
-MIT License — ver [LICENSE](LICENSE) para más detalles.
+MIT License - ver [LICENSE](LICENSE) para más detalles.
