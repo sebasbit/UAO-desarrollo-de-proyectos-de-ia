@@ -254,3 +254,13 @@ fabric.properties
 # Ignore all local history of files
 .history
 .ionide
+
+Documents/
+Images/
+
+# Pesos del modelo y dataset (no subir al repo — archivos grandes)
+models/*.pkl
+models/*.pt
+models/*.bin
+data/raw/
+data/processed/
