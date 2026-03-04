@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Triage de Soporte TI</title>
+  <link rel="stylesheet" href="/static/style.css" />
+</head>
+<body>
+  <main class="container">
+    <header class="header">
+      <h1>Triage de Soporte TI</h1>
+      <p class="sub">Clasificación automática de incidencias · DeiT-Tiny · UAO</p>
+    </header>
+
+    <section class="card">
+      <h2>Sube una captura del incidente</h2>
+      <form class="form" action="/" method="post" enctype="multipart/form-data">
+        <input type="file" name="image" accept="image/*" required />
+        <button type="submit">Clasificar &amp; Enrutar</button>
+      </form>
+      <p class="hint">
+        Recomendación: anonimiza datos sensibles antes de subir la imagen.
+        Si la confianza es baja (&lt; 0.40), el sistema solicita revisión humana.
+      </p>
+    </section>
+
+    <footer class="footer">
+      <small>Proyecto académico · Desarrollo de Proyectos de IA · UAO</small>
+    </footer>
+  </main>
+</body>
+</html>

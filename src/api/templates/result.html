@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Resultado — Triage de Soporte TI</title>
+  <link rel="stylesheet" href="/static/style.css" />
+</head>
+<body>
+  <main class="container">
+    <header class="header">
+      <h1>Triage de Soporte TI</h1>
+      <p class="sub">Clasificación automática de incidencias · DeiT-Tiny · UAO</p>
+    </header>
+
+    {% if error %}
+      <section class="card">
+        <div class="alert">{{ error }}</div>
+        <a href="/" class="btn-back">← Intentar de nuevo</a>
+      </section>
+
+    {% elif result %}
+      <section class="card">
+        <h2>Resultado de clasificación</h2>
+
+        <ul class="result-list">
+          <li><span class="label">Categoría</span><span class="value">{{ result.category }}</span></li>
+          <li><span class="label">Score de confianza</span>
+              <span class="value score">{{ "%.4f"|format(result.score) }}</span></li>
+          <li><span class="label">Equipo destinatario</span><span class="value">{{ result.team }}</span></li>
+          <li><span class="label">Fecha / Hora</span><span class="value">{{ result.timestamp.strftime("%d/%m/%Y %H:%M:%S") }} UTC</span></li>
+          <li>
+            <span class="label">Revisión humana</span>
+            <span class="value {% if result.human_review_required %}badge-warn{% else %}badge-ok{% endif %}">
+              {% if result.human_review_required %}⚠ Requerida{% else %}✓ No requerida{% endif %}
+            </span>
+          </li>
+        </ul>
+
+        <div class="actions">
+          <form action="/api/report" method="post" enctype="multipart/form-data" class="form-inline">
+            <input type="file" name="image" accept="image/*" required
+                   id="pdf-input" class="input-hidden" />
+            <button type="submit" class="btn-pdf"
+                    onclick="return triggerFileIfEmpty(event)">
+              ⬇ Descargar reporte PDF
+            </button>
+          </form>
+          <a href="/" class="btn-back">← Nueva clasificación</a>
+        </div>
+        <p class="hint small">
+          Para generar el PDF selecciona la misma imagen. El reporte incluye
+          categoría, score, equipo y timestamp.
+        </p>
+      </section>
+    {% endif %}
+
+    <footer class="footer">
+      <small>Proyecto académico · Desarrollo de Proyectos de IA · UAO</small>
+    </footer>
+  </main>
+
+  <script>
+    function triggerFileIfEmpty(e) {
+      const input = document.getElementById('pdf-input');
+      if (!input.files || input.files.length === 0) {
+        e.preventDefault();
+        input.click();
+        input.addEventListener('change', () => {
+          if (input.files.length > 0) input.closest('form').submit();
+        }, { once: true });
+        return false;
+      }
+      return true;
+    }
+  </script>
+</body>
+</html>
