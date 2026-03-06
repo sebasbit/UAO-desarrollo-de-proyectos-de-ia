@@ -9,12 +9,9 @@ from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 
 from src.api.routes import health
+from src.api.routes import predict
 from src.api.routes import report
 from src.api.routes import ui
-
-# T05 (predict.py / schemas.py) Cuando esté listo, agregar aquí:
-#   from src.api.routes import predict
-#   app.include_router(predict.router, prefix="/api")
 
 app = FastAPI(
     title="Triage de Soporte TI",
@@ -25,5 +22,6 @@ app = FastAPI(
 app.mount("/static", StaticFiles(directory="src/api/static"), name="static")
 
 app.include_router(health.router)
+app.include_router(predict.router, prefix="/api")
 app.include_router(report.router, prefix="/api")
 app.include_router(ui.router)
