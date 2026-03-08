@@ -1,5 +1,3 @@
-# RF-02: prueba del endpoint GET /health
-
 from fastapi.testclient import TestClient
 
 
