@@ -48,8 +48,7 @@ async def predict_image(
         raise HTTPException(
             status_code=415,
             detail=(
-                f"Formato no soportado: '{file.content_type}'. "
-                "Use JPG, PNG o WebP."
+                f"Formato no soportado: '{file.content_type}'. Use JPG, PNG o WebP."
             ),
         )
 

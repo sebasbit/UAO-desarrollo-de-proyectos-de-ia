@@ -61,8 +61,7 @@ def load_dataset() -> tuple[list[np.ndarray], list[str]]:
             continue
 
         image_paths = [
-            p for p in category_dir.iterdir()
-            if p.suffix.lower() in VALID_EXTENSIONS
+            p for p in category_dir.iterdir() if p.suffix.lower() in VALID_EXTENSIONS
         ]
 
         if not image_paths:
@@ -94,7 +93,9 @@ def main() -> None:
     embeddings_list, labels = load_dataset()
 
     if not embeddings_list:
-        print("\n[ERROR] No se encontraron imágenes. Verifica la estructura del dataset.")  # noqa: E501
+        print(
+            "\n[ERROR] No se encontraron imágenes. Verifica la estructura del dataset."
+        )  # noqa: E501
         sys.exit(1)
 
     X = np.array(embeddings_list)
