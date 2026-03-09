@@ -1,283 +1,159 @@
 # Triage de Soporte TI mediante Clasificación de Imágenes
 
-> Implementación con Visión Computacional, FastAPI y ejecución de modelo en CPU
-> Proyecto final - Desarrollo de Proyectos de Inteligencia Artificial
-> Universidad Autónoma de Occidente
+Proyecto integrado sobre el esqueleto **UAO-desarrollo-de-proyectos-de-ia** para que el triage visual funcione siguiendo el árbol del repo base.
 
----
+## Qué se integró
 
-## Integrantes
+Se tomó el proyecto `triage_deit_cpu_fastapi_do_grpc_mlflow_uv_v1` y se acomodó dentro de la estructura del repo académico:
 
-| Nombre | Código |
-|---|---|
-| Alexander Calambas Ramirez | 22602907 |
-| Angelo Parra Cortez | 22506988 |
-| Oscar Portela Ospina | 22507314 |
-| Sebastian Torres Cabrera | 22507322 |
+- `src/api/`: FastAPI, rutas HTTP, UI Jinja2 y esquemas de respuesta.
+- `src/inference/`: extractor DeiT-Tiny, carga del clasificador y servicio de predicción.
+- `src/domain/`: catálogo de categorías y equipos de enrutamiento.
+- `src/grpc/`: servidor, cliente y stubs gRPC.
+- `scripts/`: entrenamiento y evaluación.
+- `proto/`: contrato `triage.proto`.
+- `tests/`: pruebas para health, predict, inferencia y gRPC.
+- `docker-compose.yml`: despliegue web + gRPC.
 
----
+## Árbol principal
 
-## Descripción general
-
-En los help desks y áreas de soporte TI, el proceso de **triage inicial** es una de las actividades más repetitivas y propensas a errores. Los agentes deben leer manualmente descripciones de usuarios, interpretar capturas de pantalla y determinar el tipo de incidente para enrutarlo al equipo correcto. Este flujo es lento y susceptible a errores de enrutamiento que incrementan el **MTTR** (Mean Time To Resolution) y la carga operativa.
-
-Este proyecto propone una solución basada en **Visión por Computadora con Transformers** para automatizar ese triage: el sistema recibe una captura de pantalla de un incidente TI, la clasifica en una categoría de soporte predefinida y sugiere el equipo responsable de atenderlo - sin intervención manual.
-
----
-
-## Objetivo general
-
-Desarrollar y desplegar una aplicación web y API HTTP, ejecutable en CPU, que clasifique imágenes de incidencias TI en categorías de soporte (triage visual) y entregue predicciones Top-K con probabilidades, alcanzando un **Macro-F1 >= 0.70** sobre el conjunto de evaluación, con manejo de errores, pruebas automatizadas y builds reproducibles mediante Docker.
-
----
-
-## Objetivos específicos
-
-- Definir el catálogo de categorías de soporte (mínimo 6) con reglas de enrutamiento por equipo responsable.
-- Construir un dataset de demostración (20–50 imágenes por categoría) con capturas simuladas o públicas, garantizando ausencia de PII.
-- Implementar el módulo de inferencia sobre **DeiT-Tiny** con un clasificador final ajustado a las categorías de soporte.
-- Exponer la solución mediante **FastAPI**: endpoint `POST /api/predict` (Top-K con probabilidad) y `GET /health`.
-- Construir una interfaz web (HTML/Jinja2) para carga de imágenes y visualización del resultado de enrutamiento.
-- Incorporar pruebas automatizadas (mínimo 3) y pipeline CI en GitHub Actions para validación en cada push/PR.
-- Empaquetar con **Docker** para despliegue reproducible y prueba de despliegue en DigitalOcean Droplet.
-
----
-
-## Categorías de clasificación
-
-El sistema clasifica imágenes en 8 categorías con enrutamiento sugerido al equipo responsable:
-
-| Categoría | Ejemplos de imagen | Equipo sugerido |
-|---|---|---|
-| Red / Conectividad | Router, switch, Wi-Fi, errores de conexión | Equipo Redes |
-| Acceso / Contraseñas | Pantallas de login, bloqueos, MFA | Soporte N1 / IAM |
-| Correo / Office 365 | Outlook, OWA, errores de sincronización | Equipo O365 |
-| Impresión / Periféricos | Impresoras, spooler, escáneres | Equipo Periféricos |
-| Aplicación / Errores | Stack traces, errores de app, crash windows | Equipo Aplicaciones |
-| Hardware / Equipo | PC sin encender, pantallas, componentes | Equipo Hardware |
-| VPN / Remoto | Cliente VPN, errores de túnel, RDP | Equipo Seguridad/Redes |
-| Otros / No clasifica | Casos raros o baja confianza | Revisión humana |
-
-> **Regla de seguridad:** Si el score de confianza del modelo es menor a **0.40**, el sistema retorna automáticamente la categoría "Otros / Revisión humana", evitando enrutamientos automáticos con baja certeza.
-
----
-
-## Stack tecnológico
-
-| Componente | Tecnología |
-|---|---|
-| Backend API | FastAPI (async) + Uvicorn (ASGI) |
-| Frontend | HTML/CSS + Jinja2 templates |
-| Modelo de IA | DeiT-Tiny - HuggingFace Transformers + PyTorch CPU |
-| Clasificador final | scikit-learn (LogisticRegression / SVM), exportado como `.pkl` |
-| Contenerización | Docker - imagen reproducible para CPU (`python:3.11-slim`) |
-| CI/CD | GitHub Actions (lint + tests) + GitLab Runner (deploy a DigitalOcean) |
-| Despliegue demo | DigitalOcean Droplet (Ubuntu 22.04 LTS) con Docker |
-
-### Modelo de IA - DeiT-Tiny
-
-Se utiliza **[DeiT-Tiny](https://huggingface.co/facebook/deit-tiny-patch16-224)** (Data-efficient Image Transformers, Facebook AI Research) como extractor de embeddings visuales. Arquitectura ViT con parches 16×16 px, imagen de entrada 224×224, preentrenado en ImageNet-1k (~22 MB en disco, ~200 MB en RAM).
-
-Sobre los embeddings se entrena un clasificador final con `scikit-learn` (LogisticRegression o SVM), exportado como `.pkl`. La inferencia es 100% CPU, sin requerir GPU.
-
-**Estrategia de respaldo:** Si no se alcanza F1 >= 0.70, se aplica data augmentation o se ajusta el clasificador. El valor real se documenta con justificación.
-
----
-
-## Endpoints de la API
-
-| Método | Endpoint | Descripción |
-|---|---|---|
-| `POST` | `/api/predict` | Recibe imagen (`multipart/form-data`), retorna Top-K categorías con score y equipo sugerido |
-| `GET` | `/health` | Healthcheck - retorna `{"status": "ok"}` con HTTP 200 en < 1s |
-
-### Ejemplo de respuesta - `POST /api/predict`
-
-```json
-{
-  "category": "Red / Conectividad",
-  "score": 0.87,
-  "team": "Equipo Redes",
-  "timestamp": "2026-03-04T14:32:10",
-  "human_review_required": false
-}
+```text
+.
+├── main.py
+├── pyproject.toml
+├── Makefile
+├── docker-compose.yml
+├── proto/
+│   └── triage.proto
+├── scripts/
+│   ├── train.py
+│   └── evaluate.py
+├── src/
+│   ├── api/
+│   │   ├── main.py
+│   │   ├── deps.py
+│   │   ├── schemas.py
+│   │   ├── utils.py
+│   │   ├── routes/
+│   │   │   ├── health.py
+│   │   │   ├── predict.py
+│   │   │   └── ui.py
+│   │   ├── static/
+│   │   └── templates/
+│   ├── config.py
+│   ├── domain/
+│   ├── grpc/
+│   │   ├── client.py
+│   │   ├── server.py
+│   │   └── stubs/
+│   └── inference/
+│       ├── classifier.py
+│       ├── model.py
+│       └── service.py
+└── tests/
 ```
 
----
+## Cómo correrlo local con uv
 
-## Requisitos funcionales
-
-| ID | Requisito | Criterio de aceptación |
-|---|---|---|
-| RF-01 | Configurar FastAPI con HTML/Jinja2 | `uvicorn` arranca y renderiza rutas HTML vía Jinja2 |
-| RF-02 | Endpoint `GET /health` | Responde `{"status": "ok"}` HTTP 200 en < 1s |
-| RF-03 | Endpoint `POST /api/predict` | Acepta imágenes, rechaza formatos inválidos con 4xx, retorna `{category, score}` |
-| RF-04 | Cargar modelo DeiT-Tiny real | Carga desde checkpoint, Macro-F1 >= 0.70 en dataset de evaluación |
-| RF-05 | Interfaz web completa | Muestra categoría predicha, score y timestamp; errores sin traceback al usuario |
-| RF-06 | Exportar reporte como PDF | Botón de descarga; PDF incluye imagen, categoría, score, timestamp y reglas de enrutamiento |
-| RF-07 | Dockerfile para despliegue completo | `docker build` + `docker run` levanta UI + API; contenedor incluye el modelo |
-| RF-08 | Pipeline CI en GitHub Actions | `push`/`PR` → lint + tests; build fallido bloquea merge |
-
-## Requisitos no funcionales
-
-| ID | Categoría | Descripción |
-|---|---|---|
-| RNF-01 | CPU / Infraestructura | Inferencia sin GPU; compatible con DigitalOcean Droplet de bajo costo |
-| RNF-02 | Privacidad | Dataset de demo sin PII; capturas simuladas o públicas |
-| RNF-03 | Confiabilidad | Respuestas 4xx controladas ante entradas inválidas; sin excepciones no manejadas |
-| RNF-04 | Calidad | Mínimo 3 pruebas automatizadas y CI activo en cada push/PR |
-| RNF-05 | Portabilidad | Dockerfile para ejecución en DigitalOcean Droplet / Linux VM sin modificaciones |
-| RNF-06 | Desempeño | Macro-F1 >= 0.70 en el conjunto de evaluación; Top-1 routing accuracy reportada |
-
----
-
-## Métricas de evaluación
-
-- Accuracy
-- Macro-F1 (umbral mínimo: **0.70**)
-- Matriz de confusión
-- Top-1 y Top-2 routing accuracy
-
----
-
-## Fuera de alcance
-
-- Resolución automatizada de incidentes (solo triage y enrutamiento).
-- Integración productiva con plataformas ITSM (ServiceNow, Jira) - solo demo.
-- Autenticación empresarial o manejo de usuarios.
-- Datos reales con información personal identificable (PII).
-- Entrenamiento a gran escala o modelos de producción de alto rendimiento.
-
----
-
-## Dependencias del proyecto
-
-### Producción
-
-| Librería | Versión | Función |
-|---|---|---|
-| `torch` (CPU) | >= 2.0 | Motor de inferencia del modelo DeiT-Tiny |
-| `transformers` | >= 4.35 | Carga de modelo y procesador de imágenes (HuggingFace) |
-| `Pillow` | >= 10.0 | Preprocesamiento y validación de imágenes |
-| `scikit-learn` | >= 1.3 | Clasificador final, métricas, matriz de confusión |
-| `numpy` | >= 1.24 | Manipulación de arrays y embeddings |
-| `fastapi` | >= 0.104 | Framework web para API REST y servicio HTML |
-| `uvicorn` | >= 0.24 | Servidor ASGI para correr FastAPI |
-| `python-multipart` | >= 0.0.6 | Soporte para carga de archivos en FastAPI |
-| `jinja2` | >= 3.1 | Templates HTML para el frontend |
-| `joblib` | >= 1.3 | Serialización y carga del clasificador `.pkl` |
-
-### Desarrollo
-
-| Librería | Versión | Función |
-|---|---|---|
-| `pytest` | >= 7.0 | Ejecución de pruebas unitarias y de API |
-| `httpx` | >= 0.25 | Cliente HTTP para pruebas de endpoints en pytest |
-| `ruff` | >= 0.15 | Linter y formateador de código |
-| `pre-commit` | >= 4.5 | Hooks de calidad antes de cada commit |
-
----
-
-## Configuración del entorno
-
-Este proyecto utiliza **uv** como gestor de dependencias y entornos virtuales. Requiere Python >= 3.10.
-
-### Mac (Apple Silicon / Intel)
-
-`make` viene preinstalado en macOS. Los comandos funcionan directamente desde la terminal:
+### 1. Instalar dependencias
 
 ```bash
-make install # instala todas las dependencias
-make start # levanta el servidor en http://localhost:8000
-make test # corre los tests
-make lint # verifica calidad del código
+uv sync --group dev
 ```
 
-### Windows
+### 2. Modo rápido para pruebas locales
 
-`make` no está disponible en PowerShell por defecto. Hay dos opciones:
+Usa modelo dummy y evita descargar DeiT o requerir `models/` entrenados.
 
-**Opción A - Git Bash (recomendada)**
-
-Si tienen [Git for Windows](https://git-scm.com/) instalado, abrir **Git Bash** y usar los mismos comandos `make`:
-
-```bash
-make install
-make start
-make test
-```
-
-**Opción B - PowerShell / CMD (sin make)**
-
-Usar `uv` directamente como equivalente:
-
+**Windows PowerShell**
 ```powershell
-uv sync # equivale a make install
-uv run uvicorn src.api.main:app --reload # equivale a make start
-uv run pytest tests/ # equivale a make test
-uv run ruff check src/ tests/ scripts/ # equivale a make lint
+$env:USE_DUMMY_MODEL="1"
+uv run uvicorn src.api.main:app --reload
 ```
 
-### Con Docker
+**Git Bash / Linux / macOS**
+```bash
+USE_DUMMY_MODEL=1 uv run uvicorn src.api.main:app --reload
+```
+
+Abrir:
+- UI: `http://127.0.0.1:8000/`
+- Health: `http://127.0.0.1:8000/health`
+
+### 3. Pruebas
 
 ```bash
-# Construir la imagen
-docker build -t triage-ti .
-
-# Ejecutar el contenedor
-docker run -p 8000:8000 triage-ti
+USE_DUMMY_MODEL=1 uv run pytest
 ```
 
-La aplicación queda disponible en `http://localhost:8000`.
+## Cómo correrlo con gRPC
 
----
+### Terminal 1
+```bash
+USE_DUMMY_MODEL=1 uv run python -m src.grpc.server
+```
 
-## Dataset
+### Terminal 2
+```bash
+USE_DUMMY_MODEL=1 USE_GRPC_BACKEND=1 GRPC_TARGET=127.0.0.1:50051 uv run uvicorn src.api.main:app --reload
+```
 
-El proyecto construye un dataset de demostración propio con imágenes públicas y capturas simuladas, organizado en las 8 categorías de soporte. Ninguna imagen contiene PII.
+## Docker Compose
 
-- **Fuentes:** capturas simuladas, imágenes públicas (Unsplash, Pixabay, Wikimedia), screenshots genéricos de SO y aplicaciones en modo demo.
-- **Volumen:** 20–50 imágenes por categoría (160–400 en total).
-- **Split:** 70% entrenamiento / 15% validación / 15% test, estratificado por categoría.
+```bash
+docker compose up --build
+```
 
----
+Servicios:
+- Web FastAPI: `http://localhost:8000`
+- gRPC: `localhost:50051`
 
-## Cronograma
+## Entrenamiento real
 
-| ID | Tarea | Fechas | Entregable |
-|---|---|---|---|
-| T01 | Catálogo de categorías y reglas de enrutamiento | 26/02 | Documento validado |
-| T02 | Recolección y etiquetado del dataset | 26/02 – 28/02 | Dataset en repo |
-| T03 | Configuración entorno: repo + Dockerfile base | 26/02 – 27/02 | Repositorio en GitHub |
-| T04 | Módulo de inferencia DeiT-Tiny + clasificador | 27/02 – 03/03 | Script de inferencia funcional |
-| T05 | Endpoints FastAPI (`/api/predict` + `/health`) | 02/03 – 03/03 | Servicio probado con curl |
-| T06 | Prueba de baseline y ajuste de umbrales | 03/03 – 04/03 | Reporte (accuracy, F1) |
-| T07 | Interfaz web HTML/Jinja2 | 04/03 – 05/03 | UI funcional en navegador |
-| T08 | Mejora del modelo si F1 < 0.70 | 04/03 – 06/03 | Modelo con Macro-F1 >= 0.70 |
-| T09 | Pruebas automatizadas (unitaria, API, integración) | 05/03 – 06/03 | Tests pasando localmente |
-| T10 | Pipeline CI GitHub Actions | 06/03 – 09/03 | Workflow funcional |
-| T11 | Dockerfile final + prueba imagen Docker en CPU | 06/03 – 09/03 | Contenedor lanzado exitosamente |
-| T12 | Evidencias, demo y organización del repositorio | 10/03 – 12/03 | Proyecto funcional y documentado |
+Estructura esperada:
 
-**Ruta crítica:** T03 → T04 → T05 → T07 → T11 → T12
+```text
+data/raw/
+├── red_conectividad/
+├── acceso_contrasenas/
+├── correo_office365/
+├── impresion_perifericos/
+├── aplicacion_errores/
+├── hardware_equipo/
+├── vpn_remoto/
+└── otros/
+```
 
-### Hitos
+Ejecutar:
 
-| Hito | Fecha | Criterio |
-|---|---|---|
-| Modelo entrenado | 03/03/2026 | DeiT-Tiny adaptado para las 8 categorías |
-| Baseline funcional | 04/03/2026 | FastAPI accesible desde curl o Postman |
-| App completa + CI | 09/03/2026 | UI funcional, tests pasando, Docker construido |
-| Proyecto listo para entrega | 12/03/2026 | Aplicación desplegada en contenedor Docker |
+```bash
+uv run python scripts/train.py
+```
 
----
+Esto genera:
+- `models/classifier.pkl`
+- `models/labels.json`
+- `models/val_report.txt`
+- `models/confusion_matrix.csv`
+- `mlruns/` con tracking de MLflow
 
-## Metodología
+## Variables de entorno útiles
 
-El proyecto sigue una **metodología Ágil** con un sprint de desarrollo (26/02 – 09/03) más una fase de cierre (10/03 – 12/03). Cada tarea produce un incremento funcional entregable. El tablero Kanban del equipo está disponible en [GitHub Projects](https://github.com/users/sebasbit/projects/1/views/1).
+- `USE_DUMMY_MODEL=1`: evita descargar y cargar el modelo real.
+- `USE_GRPC_BACKEND=1`: hace que FastAPI consulte el backend gRPC.
+- `GRPC_TARGET=127.0.0.1:50051`: destino del servidor gRPC.
+- `CLASSIFIER_PATH=models/classifier.pkl`
+- `LABELS_PATH=models/labels.json`
+- `MIN_CONFIDENCE=0.40`
+- `TOP_K=3`
 
----
+## Endpoints
 
-## Licencia
+- `GET /health`
+- `POST /api/predict`
+- `GET /`
+- `POST /predict`
 
-MIT License - ver [LICENSE](LICENSE) para más detalles.
+## Nota importante
+
+La integración ya quedó acomodada al árbol del repo base. Lo que no pude validar dentro del contenedor fue la ejecución real de `pytest` porque el entorno aquí no tiene instalada la dependencia `grpcio`; sí pude validar que todos los archivos Python compilan correctamente con `compileall`.

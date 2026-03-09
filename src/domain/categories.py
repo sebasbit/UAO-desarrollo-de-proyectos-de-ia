@@ -19,14 +19,14 @@ class Category:
 
 
 CATEGORIES: list[Category] = [
-    Category("red_conectividad",    "Red / Conectividad",      "Equipo Redes"),
-    Category("acceso_contrasenas",  "Acceso / Contraseñas",    "Soporte N1 / IAM"),
-    Category("correo_office365",    "Correo / Office 365",     "Equipo O365"),
-    Category("impresion_perifericos","Impresión / Periféricos", "Equipo Periféricos"),
-    Category("aplicacion_errores",  "Aplicación / Errores",    "Equipo Aplicaciones"),
-    Category("hardware_equipo",     "Hardware / Equipo",       "Equipo Hardware"),
-    Category("vpn_remoto",       "VPN / Remoto",         "Equipo Seguridad/Redes"),
-    Category("otros",               "Otros / No clasifica",    "Revisión humana"),
+    Category("red_conectividad", "Red / Conectividad", "Equipo Redes"),
+    Category("acceso_contrasenas", "Acceso / Contraseñas", "Soporte N1 / IAM"),
+    Category("correo_office365", "Correo / Office 365", "Equipo O365"),
+    Category("impresion_perifericos", "Impresión / Periféricos", "Equipo Periféricos"),
+    Category("aplicacion_errores", "Aplicación / Errores", "Equipo Aplicaciones"),
+    Category("hardware_equipo", "Hardware / Equipo", "Equipo Hardware"),
+    Category("vpn_remoto", "VPN / Remoto", "Equipo Seguridad/Redes"),
+    Category("otros", "Otros / No clasifica", "Revisión humana"),
 ]
 
 CATEGORY_KEYS: list[str] = [c.key for c in CATEGORIES]
@@ -42,3 +42,11 @@ def get_category(key: str) -> Category:
 def get_team(key: str) -> str:
     """Retorna el equipo sugerido para una clave de categoría."""
     return _by_key[key].team
+
+
+_by_label: dict[str, Category] = {c.label: c for c in CATEGORIES}
+
+
+def get_category_by_label(label: str) -> Category:
+    """Retorna la categoría a partir de su etiqueta legible."""
+    return _by_label[label]

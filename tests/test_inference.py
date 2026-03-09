@@ -1,10 +1,21 @@
-"""
-Pruebas unitarias de la capa de inferencia.
+import os
 
-Cubre:
-  - Extracción de embeddings: el vector tiene la dimensión esperada
-  - Clasificador: retorna una clave válida del catálogo de categorías
-  - Regla de seguridad: score < 0.40 → categoría 'otros'
+from PIL import Image
 
-TODO (T09): implementar una vez que src/inference/ esté completo (T04)
-"""
+os.environ["USE_DUMMY_MODEL"] = "1"
+
+from src.inference.service import TriageService
+
+
+def test_inference_returns_known_category() -> None:
+    service = TriageService()
+    image = Image.new("RGB", (224, 224), color=(255, 0, 0))
+    predictions = service.predict(image)
+    assert len(predictions) >= 1
+    assert predictions[0].category_key in {
+        "red_conectividad",
+        "correo_office365",
+        "aplicacion_errores",
+        "otros",
+    }
+    assert 0.0 <= predictions[0].score <= 1.0

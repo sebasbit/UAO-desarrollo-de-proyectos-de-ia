@@ -1,4 +1,4 @@
-# RF-02: GET /health — healthcheck del servicio
+from __future__ import annotations
 
 from fastapi import APIRouter
 from fastapi.responses import JSONResponse

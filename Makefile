@@ -1,38 +1,41 @@
-.PHONY: help install start test lint format pre-commit-install train evaluate
+.PHONY: help install start test lint format pre-commit-install train evaluate grpc
 
 help:
 	@echo ""
 	@echo "Comandos disponibles:"
-	@echo "  make install           Instala dependencias con uv (cross-platform)"
-	@echo "  make start             Levanta el servidor FastAPI con recarga automática"
-	@echo "  make test              Ejecuta los tests con pytest"
-	@echo "  make lint              Verifica el código con ruff"
-	@echo "  make format            Formatea el código con ruff"
-	@echo "  make pre-commit-install Instala los hooks de pre-commit en el repo local"
-	@echo "  make train             Entrena el clasificador y guarda el .pkl"
-	@echo "  make evaluate          Evalúa el modelo y reporta Macro-F1"
+	@echo "  make install  Instala dependencias con uv"
+	@echo "  make start    Levanta FastAPI en http://localhost:8000"
+	@echo "  make grpc     Levanta el servidor gRPC en el puerto 50051"
+	@echo "  make test     Ejecuta tests con pytest"
+	@echo "  make lint     Verifica el código con ruff"
+	@echo "  make format   Formatea el código con ruff"
+	@echo "  make train    Entrena el clasificador y registra en MLflow"
+	@echo "  make evaluate Evalúa el modelo entrenado"
 	@echo ""
 
 install:
-	uv sync --locked
+	uv sync --group dev
 
 start:
 	uv run main.py
 
+grpc:
+	uv run python -m src.grpc.server
+
 test:
-	uv run pytest
+	USE_DUMMY_MODEL=1 uv run pytest
 
 lint:
-	uv run ruff check src tests scripts
+	uv run ruff check src tests scripts main.py --exclude src/grpc/stubs
 
 format:
-	uv run ruff format src tests scripts
+	uv run ruff format src tests scripts main.py --exclude src/grpc/stubs
 
 pre-commit-install:
 	uv run pre-commit install
 
 train:
-	uv run scripts/train.py
+	uv run python scripts/train.py
 
 evaluate:
-	uv run scripts/evaluate.py
+	uv run python scripts/evaluate.py
