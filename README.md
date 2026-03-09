@@ -95,13 +95,36 @@ Sobre los embeddings se entrena un clasificador final con `scikit-learn` (Logist
 
 ```json
 {
-  "category": "Red / Conectividad",
-  "score": 0.87,
-  "team": "Equipo Redes",
-  "timestamp": "2026-03-04T14:32:10",
-  "human_review_required": false
+  "predictions": [
+    {
+      "category": "Red / Conectividad",
+      "category_key": "red_conectividad",
+      "score": 0.87,
+      "team": "Equipo Redes"
+    },
+    {
+      "category": "VPN / Remoto",
+      "category_key": "vpn_remoto",
+      "score": 0.08,
+      "team": "Equipo Seguridad/Redes"
+    },
+    {
+      "category": "Acceso / Contraseñas",
+      "category_key": "acceso_contrasenas",
+      "score": 0.03,
+      "team": "Soporte N1 / IAM"
+    }
+  ],
+  "model": {
+    "model_id": "facebook/deit-tiny-patch16-224",
+    "top_k": 3,
+    "min_confidence": 0.40
+  },
+  "timestamp": "2026-03-09T14:32:10.123456"
 }
 ```
+
+> Si el score del top-1 es menor a `min_confidence` (0.40), el sistema retorna automáticamente la categoría **"Otros / Revisión humana"** para evitar enrutamientos automáticos con baja certeza.
 
 ---
 
@@ -220,12 +243,27 @@ uv run ruff check src/ tests/ scripts/ # equivale a make lint
 
 ### Con Docker
 
+El `Dockerfile` usa `python:3.12-slim` con soporte **multi-arch** (amd64 + arm64). Docker Desktop selecciona la arquitectura correcta automáticamente — el mismo comando funciona en Mac (Intel y Apple Silicon) y Windows.
+
 ```bash
-# Construir la imagen
+# Construir la imagen (incluye modelo entrenado y caché de DeiT-Tiny)
 docker build -t triage-ti .
 
-# Ejecutar el contenedor
+# Ejecutar el contenedor con el modelo real
 docker run -p 8000:8000 triage-ti
+
+# Ejecutar en modo desarrollo (sin modelo entrenado)
+docker run -p 8000:8000 -e USE_DUMMY_MODEL=1 triage-ti
+```
+
+**Con Docker Compose** (levanta la app + servidor gRPC juntos):
+
+```bash
+# Producción — usa modelo real por defecto
+docker compose up
+
+# Desarrollo — sin modelo entrenado
+USE_DUMMY_MODEL=1 docker compose up
 ```
 
 La aplicación queda disponible en `http://localhost:8000`.
@@ -238,7 +276,85 @@ El proyecto construye un dataset de demostración propio con imágenes públicas
 
 - **Fuentes:** capturas simuladas, imágenes públicas (Unsplash, Pixabay, Wikimedia), screenshots genéricos de SO y aplicaciones en modo demo.
 - **Volumen:** 20–50 imágenes por categoría (160–400 en total).
-- **Split:** 70% entrenamiento / 15% validación / 15% test, estratificado por categoría.
+- **Estructura de carpetas:**
+
+```
+data/
+├── raw/                    # Dataset completo, una carpeta por categoría
+│   ├── red_conectividad/
+│   ├── acceso_contrasenas/
+│   ├── correo_office365/
+│   ├── impresion_perifericos/
+│   ├── aplicacion_errores/
+│   ├── hardware_equipo/
+│   ├── vpn_remoto/
+│   └── otros/
+└── test/                   # Generado automáticamente por scripts/train.py
+    └── {categoria}/        # 15 % del dataset, separado para evaluación final
+```
+
+- **Split estratificado por categoría:**
+  - 70 % entrenamiento
+  - 15 % validación (usado durante el entrenamiento para selección del modelo)
+  - 15 % test (separado en `data/test/`, usado exclusivamente por `scripts/evaluate.py`)
+
+> El conjunto de test **nunca se usa durante el entrenamiento ni la validación**. `scripts/train.py` lo copia automáticamente a `data/test/` al final de cada ejecución.
+
+---
+
+## Pipeline de ML
+
+### 1. Recolectar imágenes
+
+Agregar capturas a `data/raw/{categoria}/` (`.jpg`, `.jpeg`, `.png` o `.webp`). Mínimo 20 imágenes por categoría para que el split 70/15/15 funcione con `stratify`.
+
+### 2. Entrenar el modelo
+
+```bash
+make train
+# o directamente:
+uv run python scripts/train.py
+```
+
+El script:
+1. Extrae embeddings de todas las imágenes usando DeiT-Tiny (192 dimensiones).
+2. Divide el dataset en **70 % train / 15 % validación / 15 % test** (estratificado).
+3. Copia las imágenes de test a `data/test/` para uso posterior de `evaluate.py`.
+4. Entrena un pipeline `StandardScaler + RandomForest (300 árboles)` sobre los embeddings.
+5. Guarda el modelo en `models/classifier.pkl` y las etiquetas en `models/labels.json`.
+6. Registra métricas y artefactos en MLflow (`mlruns/`).
+
+> Para probar otros clasificadores: `uv run python scripts/train.py --clf svm_rbf_c10` (opciones: `svm_rbf_c10`, `rf`, `rf500`, `et`, `gbt`, entre otros).
+
+### 3. Evaluar en el conjunto de test
+
+```bash
+make evaluate
+# o directamente:
+uv run python scripts/evaluate.py
+```
+
+Lee las imágenes de `data/test/`, extrae embeddings y genera el reporte final (accuracy, Macro-F1, matriz de confusión). Este resultado es el que se reporta como métrica oficial del proyecto.
+
+### 4. Ejecutar la aplicación con el modelo entrenado
+
+```bash
+make start
+```
+
+Una vez que `models/classifier.pkl` y `models/labels.json` existen, la app carga el modelo real automáticamente.
+
+### Modo de desarrollo sin modelo entrenado
+
+Para desarrollar la UI o los endpoints sin necesitar un modelo entrenado:
+
+```bash
+USE_DUMMY_MODEL=1 make start
+# o en Windows PowerShell:
+$env:USE_DUMMY_MODEL="1"; uv run uvicorn src.api.main:app --reload
+```
+
+En este modo, el sistema devuelve predicciones fijas de prueba sin cargar DeiT-Tiny.
 
 ---
 

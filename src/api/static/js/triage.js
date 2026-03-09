@@ -53,7 +53,7 @@ analyzeBtn.addEventListener("click", async () => {
   hideError();
 
   const formData = new FormData();
-  formData.append("file", selectedFile);
+  formData.append("image", selectedFile);
 
   try {
     const response = await fetch("/api/predict", {
@@ -92,10 +92,13 @@ resetBtn.addEventListener("click", () => {
 
 // ── Helpers ──────────────────────────────────────────────────────────────
 function showResult(data) {
-  document.getElementById("res-category").textContent = data.category;
-  document.getElementById("res-team").textContent     = data.team;
+  const top = data.predictions[0];
+  const minConfidence = data.model?.min_confidence ?? 0.40;
 
-  const pct = Math.round(data.score * 100);
+  document.getElementById("res-category").textContent = top.category;
+  document.getElementById("res-team").textContent     = top.team;
+
+  const pct = Math.round(top.score * 100);
   document.getElementById("res-score").textContent = pct + "%";
 
   const fill = document.getElementById("score-bar-fill");
@@ -108,7 +111,7 @@ function showResult(data) {
     ts.toLocaleDateString("es-CO") + " " + ts.toLocaleTimeString("es-CO");
 
   const alertHuman = document.getElementById("alert-human");
-  alertHuman.style.display = data.human_review_required ? "block" : "none";
+  alertHuman.style.display = top.score < minConfidence ? "block" : "none";
 
   resultCard.style.display = "block";
 }
