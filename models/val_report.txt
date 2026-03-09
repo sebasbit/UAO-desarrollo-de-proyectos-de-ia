@@ -1,0 +1,13 @@
+                       precision    recall  f1-score   support
+
+   acceso_contrasenas       0.78      0.78      0.78         9
+   aplicacion_errores       1.00      0.33      0.50         9
+     correo_office365       0.58      0.78      0.67         9
+      hardware_equipo       0.75      1.00      0.86         9
+impresion_perifericos       0.73      0.89      0.80         9
+     red_conectividad       0.43      0.33      0.38         9
+           vpn_remoto       0.44      0.44      0.44         9
+
+             accuracy                           0.65        63
+            macro avg       0.67      0.65      0.63        63
+         weighted avg       0.67      0.65      0.63        63

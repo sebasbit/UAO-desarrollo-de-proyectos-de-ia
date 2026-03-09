@@ -1,23 +1,34 @@
-"""
-Modelos Pydantic que definen el contrato HTTP de la API.
-
-Responsabilidad única: serialización/deserialización y validación
-de los datos que entran y salen por HTTP. No contiene lógica de
-negocio ni de inferencia.
-
-Depende de: nada (tipos estándar de Python + Pydantic)
-"""
+from __future__ import annotations
 
 from datetime import datetime
 
 from pydantic import BaseModel
+from pydantic import Field
+
+
+class PredictionItem(BaseModel):
+    category: str = Field(..., description="Etiqueta legible de la categoría")
+    category_key: str = Field(..., description="Clave interna de la categoría")
+    score: float = Field(..., ge=0.0, le=1.0)
+    team: str = Field(..., description="Equipo sugerido para enrutar")
+
+
+class ModelInfoResponse(BaseModel):
+    app_title: str
+    model_id: str
+    top_k: int
+    max_upload_mb: int
+    min_confidence: float
+    ready: bool
+    dummy_mode: bool
+    labels: list[str]
+    classifier_path: str
+    labels_path: str
+    load_seconds: float | None = None
+    categories: list[str]
 
 
 class PredictionResponse(BaseModel):
-    """Respuesta del endpoint POST /api/predict."""
-
-    category: str
-    score: float
-    team: str
+    predictions: list[PredictionItem]
+    model: ModelInfoResponse
     timestamp: datetime
-    human_review_required: bool

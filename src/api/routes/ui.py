@@ -5,6 +5,8 @@ Responsabilidad única: renderizar templates Jinja2. No contiene
 lógica de inferencia; la UI llama al endpoint /api/predict vía fetch.
 """
 
+from __future__ import annotations
+
 from fastapi import APIRouter
 from fastapi import Request
 from fastapi.responses import HTMLResponse

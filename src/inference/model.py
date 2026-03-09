@@ -68,9 +68,7 @@ def extract_embedding(image: Image.Image) -> np.ndarray:
         outputs = _model(**inputs)
 
     # Token CLS: índice 0 del último estado oculto → shape (192,)
-    embedding: np.ndarray = (
-        outputs.last_hidden_state[:, 0, :].squeeze().cpu().numpy()
-    )
+    embedding: np.ndarray = outputs.last_hidden_state[:, 0, :].squeeze().cpu().numpy()
     return embedding
 
 

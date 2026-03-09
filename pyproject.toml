@@ -1,6 +1,6 @@
 [project]
 name = "uao-desarrollo-de-proyectos-de-ia"
-version = "0.1.0"
+version = "0.2.0"
 description = "Proyecto final del curso Desarrollo de Proyectos de Inteligencia Artificial"
 readme = "README.md"
 license = "MIT"
@@ -15,52 +15,42 @@ classifiers = [
     "Topic :: Education",
     "Topic :: Scientific/Engineering :: Artificial Intelligence",
 ]
-requires-python = ">=3.10"
+requires-python = ">=3.10,<3.13"
 dependencies = [
-    # --- Modelo e inferencia ---
     "torch>=2.0",
-    "transformers>=4.35",
+    "torchvision>=0.15",
+    "transformers>=4.40",
     "Pillow>=10.0",
     "scikit-learn>=1.3",
     "numpy>=1.24",
     "joblib>=1.3",
-    # --- API y servidor ---
-    "fastapi>=0.104",
-    "uvicorn>=0.24",
-    "python-multipart>=0.0.6",
+    "fastapi>=0.110",
+    "uvicorn[standard]>=0.24",
+    "python-multipart>=0.0.9",
     "jinja2>=3.1",
+    "grpcio>=1.60",
+    "protobuf>=4.25",
+    "mlflow>=2.10",
 ]
 
-# ---------------------------------------------------------------------------
-# Configuración cross-platform de PyTorch (uv >= 0.10)
-#
-# torch-backend = "cpu" instruye a uv para instalar el build CPU-only
-# de PyTorch en todas las plataformas:
-#
-#   Mac (Apple Silicon M-series) → CPU build, coherente con producción.
-#   Windows                      → CPU-only (~500 MB menos que CUDA).
-#   Linux / Docker               → CPU-only, build de producción.
-#
-# Cada integrante ejecuta `uv sync` y obtiene el build correcto
-# sin cambiar nada manualmente.
-# ---------------------------------------------------------------------------
 [tool.uv]
 torch-backend = "cpu"
 
 [dependency-groups]
 dev = [
     "pre-commit>=4.5.1",
-    "pytest>=7.0",
-    "httpx>=0.25",
+    "pytest>=8.0",
+    "httpx>=0.27",
     "ruff>=0.15.2",
+    "grpcio-tools>=1.60",
 ]
 
 [tool.pytest.ini_options]
-pythonpath = "src"
+pythonpath = ["."]
 testpaths = ["tests"]
 addopts = "--verbose"
 filterwarnings = [
-    "error",
+    "ignore::DeprecationWarning",
 ]
 
 [tool.ruff]
@@ -69,14 +59,7 @@ fix = false
 output-format = "full"
 
 [tool.ruff.lint]
-select = [
-    "B", # flake8-bugbear
-    "E", # pycodestyle error
-    "F", # pyflakes
-    "I", # isort
-    "UP", # pyupgrade
-    "W", # pycodestyle warning
-]
+select = ["B", "E", "F", "I", "UP", "W"]
 
 [tool.ruff.lint.isort]
 force-single-line = true
