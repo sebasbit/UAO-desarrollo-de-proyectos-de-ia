@@ -3,14 +3,14 @@
 help:
 	@echo ""
 	@echo "Comandos disponibles:"
-	@echo "  make install            Instala dependencias con uv"
-	@echo "  make start              Levanta FastAPI en http://localhost:8000"
-	@echo "  make grpc               Levanta el servidor gRPC en el puerto 50051"
-	@echo "  make test               Ejecuta tests con pytest"
-	@echo "  make lint               Verifica el código con ruff"
-	@echo "  make format             Formatea el código con ruff"
-	@echo "  make train              Entrena el clasificador y registra en MLflow"
-	@echo "  make evaluate           Evalúa el modelo entrenado"
+	@echo "  make install  Instala dependencias con uv"
+	@echo "  make start    Levanta FastAPI en http://localhost:8000"
+	@echo "  make grpc     Levanta el servidor gRPC en el puerto 50051"
+	@echo "  make test     Ejecuta tests con pytest"
+	@echo "  make lint     Verifica el código con ruff"
+	@echo "  make format   Formatea el código con ruff"
+	@echo "  make train    Entrena el clasificador y registra en MLflow"
+	@echo "  make evaluate Evalúa el modelo entrenado"
 	@echo ""
 
 install:
@@ -26,10 +26,10 @@ test:
 	USE_DUMMY_MODEL=1 uv run pytest
 
 lint:
-	uv run ruff check src tests scripts main.py
+	uv run ruff check src tests scripts main.py --exclude src/grpc/stubs
 
 format:
-	uv run ruff format src tests scripts main.py
+	uv run ruff format src tests scripts main.py --exclude src/grpc/stubs
 
 pre-commit-install:
 	uv run pre-commit install

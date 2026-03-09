@@ -3,7 +3,6 @@ from __future__ import annotations
 from datetime import datetime
 
 from fastapi import APIRouter
-from fastapi import File
 from fastapi import UploadFile
 from fastapi.responses import JSONResponse
 
@@ -71,6 +70,6 @@ def _predict(upload: UploadFile) -> PredictionResponse:
 
 
 @router.post("/predict", response_model=PredictionResponse)
-def predict_api(image: UploadFile = File(...)) -> JSONResponse:
+def predict_api(image: UploadFile) -> JSONResponse:
     response = _predict(image)
     return JSONResponse(content=response.model_dump(mode="json"))

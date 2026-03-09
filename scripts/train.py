@@ -45,7 +45,9 @@ def load_dataset() -> tuple[np.ndarray, list[str]]:
             continue
 
         image_paths = [
-            path for path in category_dir.iterdir() if path.suffix.lower() in VALID_EXTENSIONS
+            path
+            for path in category_dir.iterdir()
+            if path.suffix.lower() in VALID_EXTENSIONS
         ]
         if not image_paths:
             print(f"[aviso] Sin imágenes en: {category_dir}")
@@ -61,9 +63,7 @@ def load_dataset() -> tuple[np.ndarray, list[str]]:
                 print(f"[error] {image_path.name}: {exc}")
 
     if not embeddings:
-        raise RuntimeError(
-            "No se encontraron imágenes válidas en data/raw/."
-        )
+        raise RuntimeError("No se encontraron imágenes válidas en data/raw/.")
 
     return np.array(embeddings), labels
 
@@ -114,9 +114,15 @@ def main() -> None:
         mlflow.log_metric("val_macro_f1", macro_f1)
         mlflow.log_metric("val_accuracy", acc)
         mlflow.log_artifact(str(MODELS_DIR / "val_report.txt"), artifact_path="reports")
-        mlflow.log_artifact(str(MODELS_DIR / "confusion_matrix.csv"), artifact_path="reports")
-        mlflow.log_artifact(str(MODELS_DIR / "labels.json"), artifact_path="model_files")
-        mlflow.log_artifact(str(MODELS_DIR / "classifier.pkl"), artifact_path="model_files")
+        mlflow.log_artifact(
+            str(MODELS_DIR / "confusion_matrix.csv"), artifact_path="reports"
+        )
+        mlflow.log_artifact(
+            str(MODELS_DIR / "labels.json"), artifact_path="model_files"
+        )
+        mlflow.log_artifact(
+            str(MODELS_DIR / "classifier.pkl"), artifact_path="model_files"
+        )
         mlflow.sklearn.log_model(clf, artifact_path="sklearn_model")
 
     print(report)

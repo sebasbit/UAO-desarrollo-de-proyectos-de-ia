@@ -2,8 +2,9 @@ import io
 import os
 from concurrent import futures
 
-import grpc
 from PIL import Image
+
+import grpc
 
 os.environ["USE_DUMMY_MODEL"] = "1"
 

@@ -4,13 +4,13 @@ import io
 import os
 from concurrent import futures
 
-import grpc
 from PIL import Image
-
 from src.config import AppConfig
 from src.grpc.stubs import triage_pb2
 from src.grpc.stubs import triage_pb2_grpc
 from src.inference.service import TriageService
+
+import grpc
 
 
 def _read_image_bytes(image_bytes: bytes) -> Image.Image:

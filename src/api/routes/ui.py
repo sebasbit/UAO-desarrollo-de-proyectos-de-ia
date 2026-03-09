@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 from fastapi import APIRouter
-from fastapi import File
 from fastapi import Request
 from fastapi import UploadFile
 from fastapi.responses import HTMLResponse
@@ -30,7 +29,7 @@ def index(request: Request) -> HTMLResponse:
 
 
 @router.post("/predict", response_class=HTMLResponse)
-def predict_html(request: Request, image: UploadFile = File(...)) -> HTMLResponse:
+def predict_html(request: Request, image: UploadFile) -> HTMLResponse:
     try:
         response = _predict(image)
         results = [

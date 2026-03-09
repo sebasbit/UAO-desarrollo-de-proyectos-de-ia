@@ -1,9 +1,9 @@
 from __future__ import annotations
 
-import grpc
-
 from src.grpc.stubs import triage_pb2
 from src.grpc.stubs import triage_pb2_grpc
+
+import grpc
 
 
 class GrpcTriageClient:

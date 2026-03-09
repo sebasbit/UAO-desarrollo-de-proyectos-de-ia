@@ -6,14 +6,12 @@ import time
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
-from typing import Optional
 
 import numpy as np
 from PIL import Image
 
 from src.config import AppConfig
 from src.domain.categories import CATEGORIES
-from src.domain.categories import Category
 from src.domain.categories import get_category
 from src.inference import model as embedding_model
 
@@ -29,7 +27,7 @@ class Prediction:
 
 
 class TriageService:
-    def __init__(self, cfg: Optional[AppConfig] = None) -> None:
+    def __init__(self, cfg: AppConfig | None = None) -> None:
         self.cfg = cfg or AppConfig()
         self._ready = False
         self._clf_artifact: dict[str, Any] | None = None
@@ -54,7 +52,8 @@ class TriageService:
         labels_path = Path(self.cfg.labels_path)
         if not labels_path.exists():
             raise FileNotFoundError(
-                f"No se encontró '{labels_path}'. Ejecuta el pipeline de entrenamiento primero."
+                f"No se encontró '{labels_path}'. "
+                "Ejecuta el pipeline de entrenamiento primero."
             )
         info = json.loads(labels_path.read_text(encoding="utf-8"))
         self._labels = list(info["labels"])
