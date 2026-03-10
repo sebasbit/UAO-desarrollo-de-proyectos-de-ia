@@ -69,8 +69,8 @@ El sistema clasifica imágenes en 8 categorías con enrutamiento sugerido al equ
 | Backend API | FastAPI (async) + Uvicorn (ASGI) |
 | Frontend | HTML/CSS + Jinja2 templates |
 | Modelo de IA | DeiT-Tiny - HuggingFace Transformers + PyTorch CPU |
-| Clasificador final | scikit-learn (LogisticRegression / SVM), exportado como `.pkl` |
-| Contenerización | Docker - imagen reproducible para CPU (`python:3.11-slim`) |
+| Clasificador final | scikit-learn (StandardScaler + RandomForest 300 árboles), exportado como `.pkl` |
+| Contenerización | Docker - imagen reproducible para CPU (`python:3.12-slim`) |
 | CI/CD | GitHub Actions (lint + tests) + GitLab Runner (deploy a DigitalOcean) |
 | Despliegue demo | DigitalOcean Droplet (Ubuntu 22.04 LTS) con Docker |
 
@@ -78,7 +78,7 @@ El sistema clasifica imágenes en 8 categorías con enrutamiento sugerido al equ
 
 Se utiliza **[DeiT-Tiny](https://huggingface.co/facebook/deit-tiny-patch16-224)** (Data-efficient Image Transformers, Facebook AI Research) como extractor de embeddings visuales. Arquitectura ViT con parches 16×16 px, imagen de entrada 224×224, preentrenado en ImageNet-1k (~22 MB en disco, ~200 MB en RAM).
 
-Sobre los embeddings se entrena un clasificador final con `scikit-learn` (LogisticRegression o SVM), exportado como `.pkl`. La inferencia es 100% CPU, sin requerir GPU.
+Sobre los embeddings se entrena un pipeline `StandardScaler + RandomForest (300 árboles)` con `scikit-learn`, exportado como `.pkl`. La inferencia es 100% CPU, sin requerir GPU.
 
 **Estrategia de respaldo:** Si no se alcanza F1 >= 0.70, se aplica data augmentation o se ajusta el clasificador. El valor real se documenta con justificación.
 
@@ -89,6 +89,7 @@ Sobre los embeddings se entrena un clasificador final con `scikit-learn` (Logist
 | Método | Endpoint | Descripción |
 |---|---|---|
 | `POST` | `/api/predict` | Recibe imagen (`multipart/form-data`), retorna Top-K categorías con score y equipo sugerido |
+| `POST` | `/api/report` | Recibe imagen, genera y retorna un reporte PDF descargable con el resultado del triage |
 | `GET` | `/health` | Healthcheck - retorna `{"status": "ok"}` con HTTP 200 en < 1s |
 
 ### Ejemplo de respuesta - `POST /api/predict`
@@ -189,6 +190,7 @@ Sobre los embeddings se entrena un clasificador final con `scikit-learn` (Logist
 | `python-multipart` | >= 0.0.6 | Soporte para carga de archivos en FastAPI |
 | `jinja2` | >= 3.1 | Templates HTML para el frontend |
 | `joblib` | >= 1.3 | Serialización y carga del clasificador `.pkl` |
+| `reportlab` | >= 4.4 | Generación de reportes PDF del resultado de triage |
 
 ### Desarrollo
 
