@@ -38,7 +38,7 @@
     <h2>Resultado del triage</h2>
 
     <div class="result-row">
-      <span class="label">Categoria</span>
+      <span class="label">Categoría</span>
       <span class="value" id="res-category"></span>
     </div>
     <div class="result-row">
@@ -60,15 +60,18 @@
     </div>
 
     <div class="alert-human" id="alert-human">
-      &#9888;&#65039; Confianza baja &mdash; se recomienda revision humana antes de enrutar.
+      &#9888;&#65039; Confianza baja &mdash; se recomienda revisión humana antes de enrutar.
     </div>
 
-    <button id="reset-btn">Analizar otra imagen</button>
+    <div class="result-actions">
+      <button id="reset-btn">Analizar otra imagen</button>
+      <button id="pdf-btn" class="btn-pdf" disabled>⬇ Descargar reporte PDF</button>
+    </div>
   </div>
 
   <!-- Categories reference -->
   <div class="card">
-    <h2>Categorias de clasificacion</h2>
+    <h2>Categorías de clasificación</h2>
     <div class="categories-grid">
       {% for cat in categories %}
       <div class="cat-chip">
