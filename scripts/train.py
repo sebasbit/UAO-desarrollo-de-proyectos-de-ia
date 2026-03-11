@@ -129,14 +129,18 @@ def build_classifier(name: str) -> Pipeline:
     import argparse  # noqa: PLC0415
 
     classifiers: dict = {
-        "svm_rbf_c10": SVC(kernel="rbf", C=10, gamma="scale", probability=True,
-                           random_state=42),
-        "svm_rbf_c5": SVC(kernel="rbf", C=5, gamma="scale", probability=True,
-                          random_state=42),
-        "svm_rbf_auto": SVC(kernel="rbf", C=10, gamma="auto", probability=True,
-                            random_state=42),
-        "svm_rbf_c100": SVC(kernel="rbf", C=100, gamma="scale", probability=True,
-                            random_state=42),
+        "svm_rbf_c10": SVC(
+            kernel="rbf", C=10, gamma="scale", probability=True, random_state=42
+        ),
+        "svm_rbf_c5": SVC(
+            kernel="rbf", C=5, gamma="scale", probability=True, random_state=42
+        ),
+        "svm_rbf_auto": SVC(
+            kernel="rbf", C=10, gamma="auto", probability=True, random_state=42
+        ),
+        "svm_rbf_c100": SVC(
+            kernel="rbf", C=100, gamma="scale", probability=True, random_state=42
+        ),
         "svm_linear": SVC(kernel="linear", C=1, probability=True, random_state=42),
         "svm_ovr": OneVsRestClassifier(
             SVC(kernel="rbf", C=10, gamma="scale", probability=True, random_state=42)
@@ -149,12 +153,26 @@ def build_classifier(name: str) -> Pipeline:
         "knn7": KNeighborsClassifier(n_neighbors=7, metric="cosine"),
         "ensemble": VotingClassifier(
             estimators=[
-                ("rf", RandomForestClassifier(n_estimators=300, random_state=42,
-                                              n_jobs=-1)),
-                ("et", ExtraTreesClassifier(n_estimators=300, random_state=42,
-                                            n_jobs=-1)),
-                ("svm", SVC(kernel="rbf", C=10, gamma="scale", probability=True,
-                            random_state=42)),
+                (
+                    "rf",
+                    RandomForestClassifier(
+                        n_estimators=300, random_state=42, n_jobs=-1
+                    ),
+                ),
+                (
+                    "et",
+                    ExtraTreesClassifier(n_estimators=300, random_state=42, n_jobs=-1),
+                ),
+                (
+                    "svm",
+                    SVC(
+                        kernel="rbf",
+                        C=10,
+                        gamma="scale",
+                        probability=True,
+                        random_state=42,
+                    ),
+                ),
             ],
             voting="soft",
         ),
@@ -175,9 +193,21 @@ def main() -> None:
     parser.add_argument(
         "--clf",
         default="svm_rbf_c10",
-        choices=["svm_rbf_c10", "svm_rbf_c5", "svm_rbf_auto", "svm_rbf_c100",
-                 "svm_linear", "svm_ovr", "rf", "rf500", "et", "gbt",
-                 "knn5", "knn7", "ensemble"],
+        choices=[
+            "svm_rbf_c10",
+            "svm_rbf_c5",
+            "svm_rbf_auto",
+            "svm_rbf_c100",
+            "svm_linear",
+            "svm_ovr",
+            "rf",
+            "rf500",
+            "et",
+            "gbt",
+            "knn5",
+            "knn7",
+            "ensemble",
+        ],
         help="Clasificador a usar (default: svm_rbf_c10)",
     )
     parser.add_argument(
@@ -191,7 +221,7 @@ def main() -> None:
     X, y, paths = load_dataset(use_cache=not args.no_cache)
     print(f"Total imágenes: {len(y)} | Categorías: {len(set(y))}")
 
-    # ── Paso 1: separar test (15 %) ──────────────────────────────────────────
+    # Paso 1: separar test (15 %)
     X_trainval, X_test, y_trainval, y_test, paths_trainval, paths_test = (
         train_test_split(
             X,
@@ -203,7 +233,7 @@ def main() -> None:
         )
     )
 
-    # ── Paso 2: separar validación del resto (15 % del total ≈ 17.6 % del trainval)
+    # Paso 2: separar validación del resto (15 % del total ≈ 17.6 % del trainval)
     val_relative = VAL_RATIO / (1.0 - TEST_RATIO)
     X_train, X_val, y_train, y_val = train_test_split(
         X_trainval,
@@ -219,24 +249,24 @@ def main() -> None:
         f"test: {len(y_test)}"
     )
 
-    # ── Exportar imágenes de test para scripts/evaluate.py ───────────────────
+    # Exportar imágenes de test para scripts/evaluate.py
     export_test_images(paths_test, y_test)
 
-    # ── Entrenamiento ─────────────────────────────────────────────────────────
+    # Entrenamiento
     # Pipeline: StandardScaler + clasificador elegido.
     # predict_proba() funciona igual en service.py sin cambios.
     clf = build_classifier(args.clf)
     print(f"Clasificador: {args.clf}")
     clf.fit(X_train, y_train)
 
-    # ── Métricas de validación ────────────────────────────────────────────────
+    # Métricas de validación
     y_pred_val = clf.predict(X_val)
     macro_f1_val = float(f1_score(y_val, y_pred_val, average="macro"))
     acc_val = float(accuracy_score(y_val, y_pred_val))
     report_val = classification_report(y_val, y_pred_val, zero_division=0)
     cm_val = confusion_matrix(y_val, y_pred_val, labels=sorted(set(y)))
 
-    # ── Persistencia ─────────────────────────────────────────────────────────
+    # Persistencia
     MODELS_DIR.mkdir(parents=True, exist_ok=True)
     joblib.dump({"clf": clf, "encoder": None}, MODELS_DIR / "classifier.pkl")
     (MODELS_DIR / "labels.json").write_text(
@@ -246,7 +276,7 @@ def main() -> None:
     (MODELS_DIR / "val_report.txt").write_text(report_val, encoding="utf-8")
     np.savetxt(MODELS_DIR / "confusion_matrix.csv", cm_val, delimiter=",", fmt="%d")
 
-    # ── MLflow ────────────────────────────────────────────────────────────────
+    # MLflow
     tracking_uri, experiment, run_name = mlflow_defaults()
     mlflow.set_tracking_uri(tracking_uri)
     mlflow.set_experiment(experiment)

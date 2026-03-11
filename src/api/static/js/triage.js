@@ -11,22 +11,22 @@
  *   3. Clic en "Descargar PDF" → fetch POST /api/report → descarga automática
  */
 
-const dropZone    = document.getElementById("drop-zone");
-const fileInput   = document.getElementById("file-input");
+const dropZone = document.getElementById("drop-zone");
+const fileInput = document.getElementById("file-input");
 const previewArea = document.getElementById("preview-area");
-const previewImg  = document.getElementById("preview-img");
+const previewImg = document.getElementById("preview-img");
 const previewName = document.getElementById("preview-name");
-const analyzeBtn  = document.getElementById("analyze-btn");
-const loading     = document.getElementById("loading");
-const errorBox    = document.getElementById("error-box");
-const resultCard  = document.getElementById("result");
-const resetBtn    = document.getElementById("reset-btn");
-const pdfBtn      = document.getElementById("pdf-btn");
+const analyzeBtn = document.getElementById("analyze-btn");
+const loading = document.getElementById("loading");
+const errorBox = document.getElementById("error-box");
+const resultCard = document.getElementById("result");
+const resetBtn = document.getElementById("reset-btn");
+const pdfBtn = document.getElementById("pdf-btn");
 
 /** @type {File|null} Archivo de imagen actualmente seleccionado. */
 let selectedFile = null;
 
-// ── Selección de archivo ──────────────────────────────────────────────────────
+// Selección de archivo
 
 /**
  * Actualiza la vista previa y habilita el botón de análisis.
@@ -61,7 +61,7 @@ dropZone.addEventListener("drop", (e) => {
   handleFile(e.dataTransfer.files[0]);
 });
 
-// ── Análisis ──────────────────────────────────────────────────────────────────
+// Análisis
 
 /**
  * Envía la imagen a /api/predict y renderiza el resultado.
@@ -102,7 +102,7 @@ analyzeBtn.addEventListener("click", async () => {
   }
 });
 
-// ── Descarga PDF ──────────────────────────────────────────────────────────────
+// Descarga PDF
 
 /**
  * Envía la imagen a /api/report y descarga automáticamente el PDF resultante.
@@ -136,9 +136,9 @@ pdfBtn.addEventListener("click", async () => {
 
     // Descargar como Blob sin recargar la página
     const blob = await response.blob();
-    const url  = URL.createObjectURL(blob);
-    const a    = document.createElement("a");
-    a.href     = url;
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
     a.download = filename;
     a.click();
     URL.revokeObjectURL(url);
@@ -150,7 +150,7 @@ pdfBtn.addEventListener("click", async () => {
   }
 });
 
-// ── Reset ─────────────────────────────────────────────────────────────────────
+// Reset
 
 resetBtn.addEventListener("click", () => {
   selectedFile = null;
@@ -163,7 +163,7 @@ resetBtn.addEventListener("click", () => {
   hideError();
 });
 
-// ── Helpers ───────────────────────────────────────────────────────────────────
+// Helpers
 
 /**
  * Renderiza el resultado del triage en la tarjeta de resultado.
@@ -173,13 +173,13 @@ resetBtn.addEventListener("click", () => {
  * @param {string} data.timestamp - ISO timestamp de la clasificación.
  */
 function showResult(data) {
-  const top           = data.predictions[0];
+  const top = data.predictions[0];
   const minConfidence = data.model?.min_confidence ?? 0.40;
 
   document.getElementById("res-category").textContent = top.category;
-  document.getElementById("res-team").textContent     = top.team;
+  document.getElementById("res-team").textContent = top.team;
 
-  const pct  = Math.round(top.score * 100);
+  const pct = Math.round(top.score * 100);
   document.getElementById("res-score").textContent = pct + "%";
 
   const fill = document.getElementById("score-bar-fill");
@@ -197,7 +197,9 @@ function showResult(data) {
   resultCard.style.display = "block";
 }
 
-function hideResult() { resultCard.style.display = "none"; }
+function hideResult() {
+  resultCard.style.display = "none";
+}
 
 /**
  * Muestra un mensaje de error en el banner de error.
@@ -208,4 +210,6 @@ function showError(msg) {
   errorBox.style.display = "block";
 }
 
-function hideError() { errorBox.style.display = "none"; }
+function hideError() {
+  errorBox.style.display = "none";
+}

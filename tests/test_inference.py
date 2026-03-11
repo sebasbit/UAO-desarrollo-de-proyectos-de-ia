@@ -21,7 +21,8 @@ from PIL import Image
 os.environ["USE_DUMMY_MODEL"] = "1"
 
 from src.domain.categories import CATEGORY_KEYS  # noqa: E402
-from src.inference.service import TriageService   # noqa: E402
+from src.inference.service import TriageService  # noqa: E402
+
 
 @pytest.fixture(scope="module")
 def service() -> TriageService:
@@ -40,6 +41,7 @@ def service() -> TriageService:
 def rgb_image() -> Image.Image:
     """Imagen RGB mínima válida de 224×224 px para pruebas de inferencia."""
     return Image.new("RGB", (224, 224), color=(255, 0, 0))
+
 
 class TestPredictionOutput:
     """Verifica la estructura y tipos de datos de la respuesta de predict()."""
@@ -81,9 +83,7 @@ class TestPredictionOutput:
         """
         predictions = service.predict(rgb_image)
         for pred in predictions:
-            assert 0.0 <= pred.score <= 1.0, (
-                f"Score fuera de rango: {pred.score}"
-            )
+            assert 0.0 <= pred.score <= 1.0, f"Score fuera de rango: {pred.score}"
 
     def test_team_is_nonempty_string(
         self, service: TriageService, rgb_image: Image.Image
@@ -116,6 +116,7 @@ class TestPredictionOutput:
             "Las predicciones no están ordenadas por score descendente."
         )
 
+
 class TestConfidenceGate:
     """Verifica la regla: score < min_confidence → categoría 'otros'."""
 
@@ -146,7 +147,7 @@ class TestConfidenceGate:
         object.__setattr__(cfg, "model_id", "facebook/deit-tiny-patch16-224")
         object.__setattr__(cfg, "top_k", 3)
         object.__setattr__(cfg, "max_upload_mb", 8)
-        object.__setattr__(cfg, "min_confidence", 1.0)   # umbral imposible
+        object.__setattr__(cfg, "min_confidence", 1.0)  # umbral imposible
         object.__setattr__(cfg, "classifier_path", "models/classifier.pkl")
         object.__setattr__(cfg, "labels_path", "models/labels.json")
         object.__setattr__(cfg, "use_grpc_backend", False)
@@ -158,6 +159,7 @@ class TestConfidenceGate:
         predictions = svc.predict(image)
 
         assert predictions[0].category_key == "otros"
+
 
 class TestServiceInfo:
     """Verifica que info() retorne los metadatos esperados del modelo."""
@@ -171,9 +173,17 @@ class TestServiceInfo:
         """
         info = service.info()
         required = {
-            "app_title", "model_id", "top_k", "max_upload_mb",
-            "min_confidence", "ready", "dummy_mode", "labels",
-            "classifier_path", "labels_path", "categories",
+            "app_title",
+            "model_id",
+            "top_k",
+            "max_upload_mb",
+            "min_confidence",
+            "ready",
+            "dummy_mode",
+            "labels",
+            "classifier_path",
+            "labels_path",
+            "categories",
         }
         assert required.issubset(info.keys()), (
             f"Claves faltantes en info(): {required - info.keys()}"
@@ -186,6 +196,7 @@ class TestServiceInfo:
     def test_info_dummy_mode_is_true(self, service: TriageService) -> None:
         """En el entorno de pruebas, dummy_mode debe ser True."""
         assert service.info()["dummy_mode"] is True
+
 
 class TestImageVariants:
     """Verifica que el servicio acepte distintos tamaños y modos de imagen."""

@@ -12,17 +12,17 @@ deben ser válidos y abribles en un lector estándar (verificado por firma).
 from __future__ import annotations
 
 import io
-from datetime import UTC
 from datetime import datetime
+from datetime import UTC
 
 import pytest
 from fastapi.testclient import TestClient
 from PIL import Image
-
-from src.api.pdf_builder import PredictionRow
-from src.api.pdf_builder import ReportData
 from src.api.pdf_builder import _PDFBuilder
 from src.api.pdf_builder import build_report_pdf
+from src.api.pdf_builder import PredictionRow
+from src.api.pdf_builder import ReportData
+
 
 def _png_bytes(color: tuple[int, int, int] = (100, 149, 237)) -> bytes:
     """Genera un PNG válido en memoria con el color indicado."""
@@ -43,14 +43,19 @@ def _sample_report_data(score: float = 0.87) -> ReportData:
     """
     return ReportData(
         predictions=[
-            PredictionRow("Red / Conectividad", "red_conectividad", score, "Equipo Redes"),
-            PredictionRow("Correo / Office 365", "correo_office365", 0.08, "Equipo O365"),
+            PredictionRow(
+                "Red / Conectividad", "red_conectividad", score, "Equipo Redes"
+            ),
+            PredictionRow(
+                "Correo / Office 365", "correo_office365", 0.08, "Equipo O365"
+            ),
             PredictionRow("Otros / No clasifica", "otros", 0.05, "Revisión humana"),
         ],
         image_filename="captura_incidente.png",
         timestamp=datetime(2025, 6, 15, 10, 30, tzinfo=UTC),
         min_confidence=0.40,
     )
+
 
 class TestReportDataDTO:
     """Verifica la construcción y campos del DTO ReportData."""
@@ -69,10 +74,18 @@ class TestReportDataDTO:
         formato de lista de dicts que retorna predict.py.
         """
         raw = [
-            {"category": "Red / Conectividad", "category_key": "red_conectividad",
-             "score": 0.72, "team": "Equipo Redes"},
-            {"category": "Otros / No clasifica", "category_key": "otros",
-             "score": 0.28, "team": "Revisión humana"},
+            {
+                "category": "Red / Conectividad",
+                "category_key": "red_conectividad",
+                "score": 0.72,
+                "team": "Equipo Redes",
+            },
+            {
+                "category": "Otros / No clasifica",
+                "category_key": "otros",
+                "score": 0.28,
+                "team": "Revisión humana",
+            },
         ]
         d = ReportData.from_service(raw, "test.png", min_confidence=0.40)
         assert len(d.predictions) == 2
@@ -82,8 +95,7 @@ class TestReportDataDTO:
     def test_from_service_default_timestamp(self) -> None:
         """Si timestamp es None, from_service() debe usar datetime.now(UTC)."""
         d = ReportData.from_service(
-            [{"category": "X", "category_key": "otros",
-              "score": 0.3, "team": "R"}],
+            [{"category": "X", "category_key": "otros", "score": 0.3, "team": "R"}],
             "img.png",
         )
         assert isinstance(d.timestamp, datetime)
@@ -94,6 +106,7 @@ class TestReportDataDTO:
         row = PredictionRow("Otros / No clasifica", "otros", 0.25, "Revisión humana")
         assert row.score < 0.40
         assert row.category_key == "otros"
+
 
 class TestPDFBuilder:
     """Verifica el generador interno de PDF sin pasar por HTTP."""
@@ -128,15 +141,16 @@ class TestPDFBuilder:
         Con score < min_confidence el builder debe generar el banner rojo
         de revisión humana sin lanzar excepción.
         """
-        data = _sample_report_data(score=0.25)   # debajo del umbral 0.40
-        pdf  = _PDFBuilder(data).build()
+        data = _sample_report_data(score=0.25)  # debajo del umbral 0.40
+        pdf = _PDFBuilder(data).build()
         assert pdf[:5] == b"%PDF-"
 
     def test_build_with_single_prediction(self) -> None:
         """El builder debe funcionar correctamente con una sola predicción."""
         data = ReportData(
-            predictions=[PredictionRow("Otros / No clasifica", "otros",
-                                       0.30, "Revisión humana")],
+            predictions=[
+                PredictionRow("Otros / No clasifica", "otros", 0.30, "Revisión humana")
+            ],
             image_filename="solo.png",
             timestamp=datetime.now(UTC),
             min_confidence=0.40,
@@ -161,6 +175,7 @@ class TestPDFBuilder:
         """Con score=0.0 la barra debe estar completamente vacía."""
         assert _PDFBuilder._score_bar(0.0, 10) == "░" * 10
 
+
 class TestBuildReportPDF:
     """Verifica la función pública build_report_pdf()."""
 
@@ -178,6 +193,7 @@ class TestBuildReportPDF:
         pdf1 = build_report_pdf(_sample_report_data(score=0.87))
         pdf2 = build_report_pdf(_sample_report_data(score=0.30))
         assert pdf1 != pdf2
+
 
 class TestAPIReport:
     """Pruebas de integración del endpoint POST /api/report."""
@@ -259,6 +275,6 @@ class TestAPIReport:
                 "/api/report",
                 files={"image": (f"inc_{i}.png", _png_bytes(color), "image/png")},
             )
-            assert r.status_code == 200,      f"PDF #{i}: status inesperado {r.status_code}"
+            assert r.status_code == 200, f"PDF #{i}: status inesperado {r.status_code}"
             assert r.content[:5] == b"%PDF-", f"PDF #{i}: firma inválida"
-            assert len(r.content) > 1024,     f"PDF #{i}: tamaño sospechosamente pequeño"
+            assert len(r.content) > 1024, f"PDF #{i}: tamaño sospechosamente pequeño"

@@ -1,6 +1,6 @@
 """
 src/api/pdf_builder.py
-──────────────────────────────────────────────────────────────────────────────
+
 Generación del reporte PDF para el triage de soporte TI.
 
 Responsabilidad única: construir el documento PDF a partir de los datos de
@@ -10,7 +10,6 @@ de inferencia; recibe un DTO ya resuelto desde el router.
 Uso típico desde routes/report.py:
     data = ReportData.from_service(predictions, filename, timestamp)
     pdf_bytes = build_report_pdf(data)
-──────────────────────────────────────────────────────────────────────────────
 """
 
 from __future__ import annotations
@@ -18,13 +17,13 @@ from __future__ import annotations
 import io
 from dataclasses import dataclass
 from dataclasses import field
-from datetime import UTC
 from datetime import datetime
+from datetime import UTC
 
 from reportlab.lib import colors
 from reportlab.lib.pagesizes import A4
-from reportlab.lib.styles import ParagraphStyle
 from reportlab.lib.styles import getSampleStyleSheet
+from reportlab.lib.styles import ParagraphStyle
 from reportlab.lib.units import cm
 from reportlab.platypus import HRFlowable
 from reportlab.platypus import Paragraph
@@ -33,8 +32,6 @@ from reportlab.platypus import Spacer
 from reportlab.platypus import Table
 from reportlab.platypus import TableStyle
 
-
-# ── DTO ───────────────────────────────────────────────────────────────────────
 
 @dataclass
 class PredictionRow:
@@ -101,23 +98,19 @@ class ReportData:
         )
 
 
-# ── Paleta ────────────────────────────────────────────────────────────────────
-
 class _P:
-    NAVY      = colors.HexColor("#0F2645")
-    BLUE      = colors.HexColor("#1A4A8A")
-    STEEL     = colors.HexColor("#4A7FC1")
-    RED       = colors.HexColor("#C0392B")
-    GREEN     = colors.HexColor("#1E7E4A")
-    ORANGE    = colors.HexColor("#D4860A")
+    NAVY = colors.HexColor("#0F2645")
+    BLUE = colors.HexColor("#1A4A8A")
+    STEEL = colors.HexColor("#4A7FC1")
+    RED = colors.HexColor("#C0392B")
+    GREEN = colors.HexColor("#1E7E4A")
+    ORANGE = colors.HexColor("#D4860A")
     OFF_WHITE = colors.HexColor("#F7F9FC")
-    RULE      = colors.HexColor("#D0DAE8")
-    BODY      = colors.HexColor("#1A1A2E")
-    MUTED     = colors.HexColor("#6B7A99")
-    WHITE     = colors.white
+    RULE = colors.HexColor("#D0DAE8")
+    BODY = colors.HexColor("#1A1A2E")
+    MUTED = colors.HexColor("#6B7A99")
+    WHITE = colors.white
 
-
-# ── Builder ───────────────────────────────────────────────────────────────────
 
 class _PDFBuilder:
     """
@@ -126,12 +119,12 @@ class _PDFBuilder:
     No se instancia directamente desde fuera del módulo; usar build_report_pdf().
     """
 
-    PAGE   = A4
+    PAGE = A4
     MARGIN = 2.2 * cm
 
     def __init__(self, data: ReportData) -> None:
-        self._d   = data
-        self._st  = getSampleStyleSheet()
+        self._d = data
+        self._st = getSampleStyleSheet()
         self._buf = io.BytesIO()
         self._story: list = []
 
@@ -140,8 +133,10 @@ class _PDFBuilder:
         doc = SimpleDocTemplate(
             self._buf,
             pagesize=self.PAGE,
-            leftMargin=self.MARGIN, rightMargin=self.MARGIN,
-            topMargin=3.2 * cm,    bottomMargin=2.0 * cm,
+            leftMargin=self.MARGIN,
+            rightMargin=self.MARGIN,
+            topMargin=3.2 * cm,
+            bottomMargin=2.0 * cm,
             title=f"Reporte Triage TI — {self._d.timestamp:%Y-%m-%d}",
             author="Sistema de Triage de Soporte TI — UAO",
         )
@@ -153,33 +148,36 @@ class _PDFBuilder:
         )
         return self._buf.getvalue()
 
-    # ── Secciones del story ───────────────────────────────────────────────────
-
     def _build_story(self) -> None:
         s = self._story
         s.clear()
         self._section("Datos del análisis")
-        s.append(Spacer(1, .3 * cm))
+        s.append(Spacer(1, 0.3 * cm))
         self._meta_table()
-        s.append(Spacer(1, .6 * cm))
+        s.append(Spacer(1, 0.6 * cm))
         self._section("Resultados de clasificación")
-        s.append(Spacer(1, .3 * cm))
+        s.append(Spacer(1, 0.3 * cm))
         self._results_table()
-        s.append(Spacer(1, .6 * cm))
+        s.append(Spacer(1, 0.6 * cm))
         self._action_banner()
-        s.append(Spacer(1, .8 * cm))
+        s.append(Spacer(1, 0.8 * cm))
         self._footer_note()
 
     def _section(self, text: str) -> None:
         """Encabezado de sección: texto en mayúsculas con línea inferior."""
-        self._story.append(Paragraph(
-            text.upper(),
-            ParagraphStyle(
-                "Sec", parent=self._st["Normal"],
-                fontName="Helvetica-Bold", fontSize=7,
-                textColor=_P.STEEL, letterSpacing=1.5,
-            ),
-        ))
+        self._story.append(
+            Paragraph(
+                text.upper(),
+                ParagraphStyle(
+                    "Sec",
+                    parent=self._st["Normal"],
+                    fontName="Helvetica-Bold",
+                    fontSize=7,
+                    textColor=_P.STEEL,
+                    letterSpacing=1.5,
+                ),
+            )
+        )
         self._story.append(
             HRFlowable(width="100%", thickness=0.75, color=_P.RULE, spaceAfter=0)
         )
@@ -187,30 +185,43 @@ class _PDFBuilder:
     def _meta_table(self) -> None:
         """Tabla de dos columnas con metadatos: archivo, fecha, modelo, ID."""
         d = self._d
-        lbl = ParagraphStyle("ML", parent=self._st["Normal"],
-                             fontSize=8, textColor=_P.MUTED)
-        val = ParagraphStyle("MV", parent=self._st["Normal"],
-                             fontSize=8.5, textColor=_P.BODY,
-                             fontName="Helvetica-Bold")
+        lbl = ParagraphStyle(
+            "ML", parent=self._st["Normal"], fontSize=8, textColor=_P.MUTED
+        )
+        val = ParagraphStyle(
+            "MV",
+            parent=self._st["Normal"],
+            fontSize=8.5,
+            textColor=_P.BODY,
+            fontName="Helvetica-Bold",
+        )
         rows = [
-            [Paragraph("Archivo analizado", lbl),
-             Paragraph(d.image_filename, val),
-             Paragraph("Fecha y hora", lbl),
-             Paragraph(f"{d.timestamp:%d %b %Y  •  %H:%M:%S} UTC", val)],
-            [Paragraph("Modelo", lbl),
-             Paragraph("DeiT-Tiny · facebook/deit-tiny-patch16-224", val),
-             Paragraph("Umbral de confianza", lbl),
-             Paragraph(f"{d.min_confidence:.0%}", val)],
+            [
+                Paragraph("Archivo analizado", lbl),
+                Paragraph(d.image_filename, val),
+                Paragraph("Fecha y hora", lbl),
+                Paragraph(f"{d.timestamp:%d %b %Y  •  %H:%M:%S} UTC", val),
+            ],
+            [
+                Paragraph("Modelo", lbl),
+                Paragraph("DeiT-Tiny · facebook/deit-tiny-patch16-224", val),
+                Paragraph("Umbral de confianza", lbl),
+                Paragraph(f"{d.min_confidence:.0%}", val),
+            ],
         ]
         tbl = Table(rows, colWidths=[3.2 * cm, 6.3 * cm, 3.2 * cm, 4.3 * cm])
-        tbl.setStyle(TableStyle([
-            ("VALIGN",        (0, 0), (-1, -1), "TOP"),
-            ("TOPPADDING",    (0, 0), (-1, -1), 5),
-            ("BOTTOMPADDING", (0, 0), (-1, -1), 5),
-            ("LEFTPADDING",   (0, 0), (-1, -1), 0),
-            ("RIGHTPADDING",  (0, 0), (-1, -1), 6),
-            ("LINEBELOW",     (0, 0), (-1, -2), 0.3, _P.RULE),
-        ]))
+        tbl.setStyle(
+            TableStyle(
+                [
+                    ("VALIGN", (0, 0), (-1, -1), "TOP"),
+                    ("TOPPADDING", (0, 0), (-1, -1), 5),
+                    ("BOTTOMPADDING", (0, 0), (-1, -1), 5),
+                    ("LEFTPADDING", (0, 0), (-1, -1), 0),
+                    ("RIGHTPADDING", (0, 0), (-1, -1), 6),
+                    ("LINEBELOW", (0, 0), (-1, -2), 0.3, _P.RULE),
+                ]
+            )
+        )
         self._story.append(tbl)
 
     def _results_table(self) -> None:
@@ -218,20 +229,26 @@ class _PDFBuilder:
         Tabla principal con todas las predicciones top-k del modelo.
         Cada fila muestra categoría, equipo, barra de confianza y porcentaje.
         """
-        hdr_st = ParagraphStyle("H", parent=self._st["Normal"],
-                                fontSize=8, fontName="Helvetica-Bold",
-                                textColor=_P.WHITE)
-        rows = [[
-            Paragraph("CATEGORÍA", hdr_st),
-            Paragraph("EQUIPO DESTINATARIO", hdr_st),
-            Paragraph("CONFIANZA", hdr_st),
-            Paragraph("%", hdr_st),
-        ]]
+        hdr_st = ParagraphStyle(
+            "H",
+            parent=self._st["Normal"],
+            fontSize=8,
+            fontName="Helvetica-Bold",
+            textColor=_P.WHITE,
+        )
+        rows = [
+            [
+                Paragraph("CATEGORÍA", hdr_st),
+                Paragraph("EQUIPO DESTINATARIO", hdr_st),
+                Paragraph("CONFIANZA", hdr_st),
+                Paragraph("%", hdr_st),
+            ]
+        ]
 
         for i, pred in enumerate(self._d.predictions):
             score = pred.score
-            pct   = f"{score * 100:.1f} %"
-            bar   = self._score_bar(score)
+            pct = f"{score * 100:.1f} %"
+            bar = self._score_bar(score)
 
             if score >= 0.70:
                 score_color = _P.GREEN
@@ -241,36 +258,41 @@ class _PDFBuilder:
                 score_color = _P.RED
 
             cell_st = ParagraphStyle(
-                f"C{i}", parent=self._st["Normal"],
+                f"C{i}",
+                parent=self._st["Normal"],
                 fontSize=8.5 if i == 0 else 8,
                 fontName="Helvetica-Bold" if i == 0 else "Helvetica",
                 textColor=_P.BODY,
             )
             score_st = ParagraphStyle(
-                f"S{i}", parent=self._st["Normal"],
-                fontSize=8, fontName="Helvetica-Bold",
+                f"S{i}",
+                parent=self._st["Normal"],
+                fontSize=8,
+                fontName="Helvetica-Bold",
                 textColor=score_color,
             )
-            rows.append([
-                Paragraph(pred.category, cell_st),
-                Paragraph(pred.team, cell_st),
-                Paragraph(bar, score_st),
-                Paragraph(pct, score_st),
-            ])
+            rows.append(
+                [
+                    Paragraph(pred.category, cell_st),
+                    Paragraph(pred.team, cell_st),
+                    Paragraph(bar, score_st),
+                    Paragraph(pct, score_st),
+                ]
+            )
 
         col_w = [5 * cm, 5 * cm, 4.5 * cm, 2.5 * cm]
         tbl = Table(rows, colWidths=col_w, repeatRows=1)
 
         style = [
-            ("BACKGROUND",    (0, 0), (-1, 0), _P.NAVY),
-            ("TOPPADDING",    (0, 0), (-1, -1), 7),
+            ("BACKGROUND", (0, 0), (-1, 0), _P.NAVY),
+            ("TOPPADDING", (0, 0), (-1, -1), 7),
             ("BOTTOMPADDING", (0, 0), (-1, -1), 7),
-            ("LEFTPADDING",   (0, 0), (-1, -1), 10),
-            ("RIGHTPADDING",  (0, 0), (-1, -1), 10),
-            ("VALIGN",        (0, 0), (-1, -1), "MIDDLE"),
-            ("BOX",           (0, 0), (-1, -1), 0.5, _P.RULE),
-            ("LINEAFTER",     (0, 0), (-2, -1), 0.3, _P.RULE),
-            ("LINEBELOW",     (0, 0), (-1, 0),  1.5, _P.STEEL),
+            ("LEFTPADDING", (0, 0), (-1, -1), 10),
+            ("RIGHTPADDING", (0, 0), (-1, -1), 10),
+            ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
+            ("BOX", (0, 0), (-1, -1), 0.5, _P.RULE),
+            ("LINEAFTER", (0, 0), (-2, -1), 0.3, _P.RULE),
+            ("LINEBELOW", (0, 0), (-1, 0), 1.5, _P.STEEL),
         ]
         # Fila ganadora con fondo ligeramente destacado
         if len(rows) > 1:
@@ -288,7 +310,7 @@ class _PDFBuilder:
         Banner de acción recomendada según el score de la predicción principal.
         Verde si la confianza es suficiente para enrutar; rojo si requiere revisión.
         """
-        top   = self._d.predictions[0]
+        top = self._d.predictions[0]
         score = top.score
 
         if score >= self._d.min_confidence:
@@ -307,11 +329,21 @@ class _PDFBuilder:
                 "Este ticket debe revisarse manualmente antes de ser asignado."
             )
 
-        title_st = ParagraphStyle("BT", parent=self._st["Normal"],
-                                  fontSize=10, fontName="Helvetica-Bold",
-                                  textColor=border, leading=14)
-        detail_st = ParagraphStyle("BD", parent=self._st["Normal"],
-                                   fontSize=8.5, textColor=_P.MUTED, leading=13)
+        title_st = ParagraphStyle(
+            "BT",
+            parent=self._st["Normal"],
+            fontSize=10,
+            fontName="Helvetica-Bold",
+            textColor=border,
+            leading=14,
+        )
+        detail_st = ParagraphStyle(
+            "BD",
+            parent=self._st["Normal"],
+            fontSize=8.5,
+            textColor=_P.MUTED,
+            leading=13,
+        )
 
         content = [
             Paragraph(f"{icon}  {title}", title_st),
@@ -319,31 +351,39 @@ class _PDFBuilder:
             Paragraph(detail, detail_st),
         ]
         banner = Table([[content]], colWidths=[17 * cm])
-        banner.setStyle(TableStyle([
-            ("BACKGROUND",    (0, 0), (-1, -1), bg),
-            ("LINEBEFORE",    (0, 0), (0, -1), 4, border),
-            ("BOX",           (0, 0), (-1, -1), 0.4, _P.RULE),
-            ("TOPPADDING",    (0, 0), (-1, -1), 12),
-            ("BOTTOMPADDING", (0, 0), (-1, -1), 12),
-            ("LEFTPADDING",   (0, 0), (-1, -1), 14),
-            ("RIGHTPADDING",  (0, 0), (-1, -1), 14),
-        ]))
+        banner.setStyle(
+            TableStyle(
+                [
+                    ("BACKGROUND", (0, 0), (-1, -1), bg),
+                    ("LINEBEFORE", (0, 0), (0, -1), 4, border),
+                    ("BOX", (0, 0), (-1, -1), 0.4, _P.RULE),
+                    ("TOPPADDING", (0, 0), (-1, -1), 12),
+                    ("BOTTOMPADDING", (0, 0), (-1, -1), 12),
+                    ("LEFTPADDING", (0, 0), (-1, -1), 14),
+                    ("RIGHTPADDING", (0, 0), (-1, -1), 14),
+                ]
+            )
+        )
         self._story.append(banner)
 
     def _footer_note(self) -> None:
         """Nota de descargo al pie de la última sección."""
+        self._story.append(HRFlowable(width="100%", thickness=0.4, color=_P.RULE))
+        self._story.append(Spacer(1, 0.2 * cm))
         self._story.append(
-            HRFlowable(width="100%", thickness=0.4, color=_P.RULE)
+            Paragraph(
+                "Este reporte es generado automáticamente con carácter orientativo. "
+                "El modelo puede cometer errores; ante dudas, escalar a revisión "
+                "humana.",
+                ParagraphStyle(
+                    "FN",
+                    parent=self._st["Normal"],
+                    fontSize=7,
+                    textColor=_P.MUTED,
+                    leading=10,
+                ),
+            )
         )
-        self._story.append(Spacer(1, .2 * cm))
-        self._story.append(Paragraph(
-            "Este reporte es generado automáticamente con carácter orientativo. "
-            "El modelo puede cometer errores; ante dudas, escalar a revisión humana.",
-            ParagraphStyle("FN", parent=self._st["Normal"],
-                           fontSize=7, textColor=_P.MUTED, leading=10),
-        ))
-
-    # ── Canvas chrome (header / footer de página) ─────────────────────────────
 
     @staticmethod
     def _draw_chrome(canvas, doc) -> None:
@@ -364,8 +404,7 @@ class _PDFBuilder:
 
         canvas.setFont("Helvetica", 8)
         canvas.setFillColor(colors.HexColor("#A8C4E0"))
-        canvas.drawRightString(w - m, h - 1.25 * cm,
-                               f"UAO · {datetime.now():%d/%m/%Y}")
+        canvas.drawRightString(w - m, h - 1.25 * cm, f"UAO · {datetime.now():%d/%m/%Y}")
 
         # Pie de página
         canvas.setStrokeColor(_P.RULE)
@@ -373,14 +412,12 @@ class _PDFBuilder:
         canvas.line(m, 1.5 * cm, w - m, 1.5 * cm)
         canvas.setFont("Helvetica", 7)
         canvas.setFillColor(_P.MUTED)
-        canvas.drawString(m, 1.1 * cm,
-                          "Triage de Soporte TI — Desarrollo de Proyectos de IA")
+        canvas.drawString(
+            m, 1.1 * cm, "Triage de Soporte TI — Desarrollo de Proyectos de IA"
+        )
         canvas.drawCentredString(w / 2, 1.1 * cm, f"Página {doc.page}")
-        canvas.drawRightString(w - m, 1.1 * cm,
-                               f"Generado: {datetime.now():%H:%M:%S}")
+        canvas.drawRightString(w - m, 1.1 * cm, f"Generado: {datetime.now():%H:%M:%S}")
         canvas.restoreState()
-
-    # ── Util ──────────────────────────────────────────────────────────────────
 
     @staticmethod
     def _score_bar(score: float, width: int = 12) -> str:
@@ -388,8 +425,6 @@ class _PDFBuilder:
         filled = round(score * width)
         return "█" * filled + "░" * (width - filled)
 
-
-# ── Función pública ───────────────────────────────────────────────────────────
 
 def build_report_pdf(data: ReportData) -> bytes:
     """
