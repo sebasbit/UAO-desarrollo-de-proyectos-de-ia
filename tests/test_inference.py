@@ -17,10 +17,11 @@ import os
 
 import pytest
 from PIL import Image
+from src.config import AppConfig
+from src.domain.categories import CATEGORY_KEYS
 
 os.environ["USE_DUMMY_MODEL"] = "1"
 
-from src.domain.categories import CATEGORY_KEYS  # noqa: E402
 from src.inference.service import TriageService  # noqa: E402
 
 
@@ -118,7 +119,7 @@ class TestPredictionOutput:
 
 
 class TestConfidenceGate:
-    """Verifica la regla: score < min_confidence → categoría 'otros'."""
+    """Verifica la regla: si score < min_confidence entonces categoría 'otros'."""
 
     def test_dummy_top_prediction_score_above_zero(
         self, service: TriageService, rgb_image: Image.Image
@@ -140,7 +141,6 @@ class TestConfidenceGate:
         Se prueba creando un servicio con min_confidence=1.0 para forzar
         que cualquier predicción quede por debajo del umbral.
         """
-        from src.config import AppConfig
 
         cfg = AppConfig.__new__(AppConfig)
         object.__setattr__(cfg, "app_title", "Test")
