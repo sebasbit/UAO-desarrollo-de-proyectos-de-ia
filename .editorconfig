@@ -11,3 +11,6 @@ max_line_length = 88
 
 [*.{json,xml,yaml,yml}]
 indent_size = 2
+
+[*.{js,html}]
+indent_size = 2

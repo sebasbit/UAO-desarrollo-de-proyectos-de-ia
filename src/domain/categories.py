@@ -32,6 +32,7 @@ CATEGORIES: list[Category] = [
 CATEGORY_KEYS: list[str] = [c.key for c in CATEGORIES]
 
 _by_key: dict[str, Category] = {c.key: c for c in CATEGORIES}
+_by_label: dict[str, Category] = {c.label: c for c in CATEGORIES}
 
 
 def get_category(key: str) -> Category:
@@ -42,9 +43,6 @@ def get_category(key: str) -> Category:
 def get_team(key: str) -> str:
     """Retorna el equipo sugerido para una clave de categoría."""
     return _by_key[key].team
-
-
-_by_label: dict[str, Category] = {c.label: c for c in CATEGORIES}
 
 
 def get_category_by_label(label: str) -> Category:

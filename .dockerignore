@@ -3,7 +3,7 @@
 .github
 .gitignore
 
-# Entorno virtual local
+# Entorno virtual local (Docker crea el propio con uv sync)
 .venv
 .pixi
 
@@ -13,7 +13,7 @@ __pycache__/
 *.pyo
 *.pyd
 
-# IDEs
+# IDEs y sistema operativo
 .vscode/
 .idea/
 .DS_Store
@@ -25,12 +25,13 @@ tests/
 scripts/
 .pre-commit-config.yaml
 
-# Dataset y artefactos de entrenamiento
-# (se montan por volumen o se descargan en runtime)
+# Dataset e imágenes de entrenamiento (no necesarios en producción)
 data/
-models/*.pkl
-models/*.bin
-models/*.pt
+dataset_triage_ti/
+
+# Artefactos de entrenamiento que no se usan en inferencia
+models/embeddings_cache.npz
+mlruns/
 
 # Documentación y materiales del curso
 Documents/

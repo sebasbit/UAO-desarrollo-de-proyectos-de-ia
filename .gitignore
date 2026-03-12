@@ -265,6 +265,8 @@ models/*.bin
 models/*/**
 data/raw/
 data/processed/
+data/test/
+models/embeddings_cache.npz
 
 ### MLflow ###
 mlruns/
