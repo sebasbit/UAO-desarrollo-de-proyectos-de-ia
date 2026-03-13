@@ -27,11 +27,13 @@ app.mount("/static", StaticFiles(directory="src/api/static"), name="static")
 
 app.include_router(health.router)
 app.include_router(predict.router, prefix="/api")
-app.include_router(report.router,  prefix="/api")
+app.include_router(report.router, prefix="/api")
 app.include_router(ui.router)
 
 
 @app.on_event("startup")
 def startup_event() -> None:
-    """Precarga el modelo al iniciar el servidor para evitar latencia en el primer request."""
+    """
+    Precarga el modelo al iniciar el servidor para evitar latencia en el primer request.
+    """
     triage_service.load()

@@ -9,8 +9,8 @@ No contiene lógica de modelo ni de construcción de documentos.
 from __future__ import annotations
 
 import io
-from datetime import UTC
 from datetime import datetime
+from datetime import UTC
 
 from fastapi import APIRouter
 from fastapi import UploadFile
@@ -18,8 +18,8 @@ from fastapi.responses import StreamingResponse
 
 from src.api.deps import cfg
 from src.api.deps import triage_service
-from src.api.pdf_builder import ReportData
 from src.api.pdf_builder import build_report_pdf
+from src.api.pdf_builder import ReportData
 from src.api.utils import read_uploaded_image
 
 router = APIRouter()
@@ -70,7 +70,7 @@ def report_pdf(image: UploadFile) -> StreamingResponse:
     )
 
     pdf_bytes = build_report_pdf(data)
-    filename  = f"triage_{timestamp:%Y%m%d_%H%M%S}.pdf"
+    filename = f"triage_{timestamp:%Y%m%d_%H%M%S}.pdf"
 
     return StreamingResponse(
         io.BytesIO(pdf_bytes),

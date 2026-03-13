@@ -14,12 +14,13 @@ from __future__ import annotations
 
 import io
 
-import pytest
 from fastapi.testclient import TestClient
 from PIL import Image
 
-def _make_png(size: tuple[int, int] = (224, 224),
-              color: tuple[int, int, int] = (100, 149, 237)) -> bytes:
+
+def _make_png(
+    size: tuple[int, int] = (224, 224), color: tuple[int, int, int] = (100, 149, 237)
+) -> bytes:
     """Genera un PNG válido en memoria con el tamaño y color indicados."""
     buf = io.BytesIO()
     Image.new("RGB", size, color).save(buf, format="PNG")
@@ -79,16 +80,17 @@ class TestValidation:
         """
         r = client.post(
             "/api/predict",
-            files={"image": ("corrupt.png", b"\x89PNG\r\n\x1a\nDATA_CORRUPTA", "image/png")},
+            files={
+                "image": ("corrupt.png", b"\x89PNG\r\n\x1a\nDATA_CORRUPTA", "image/png")
+            },
         )
         assert r.status_code == 400
+
 
 class TestResponseSchema:
     """Verifica la estructura del JSON de respuesta para una imagen válida."""
 
-    def test_returns_200(
-        self, client: TestClient, sample_image_file: tuple
-    ) -> None:
+    def test_returns_200(self, client: TestClient, sample_image_file: tuple) -> None:
         """POST /api/predict con imagen válida debe retornar HTTP 200."""
         r = client.post("/api/predict", files={"image": sample_image_file})
         assert r.status_code == 200
@@ -97,9 +99,7 @@ class TestResponseSchema:
         self, client: TestClient, sample_image_file: tuple
     ) -> None:
         """La respuesta debe contener la clave 'predictions'."""
-        data = client.post(
-            "/api/predict", files={"image": sample_image_file}
-        ).json()
+        data = client.post("/api/predict", files={"image": sample_image_file}).json()
         assert "predictions" in data
 
     def test_predictions_is_nonempty_list(
@@ -110,9 +110,7 @@ class TestResponseSchema:
 
         Con top_k=3 (default) se esperan hasta 3 resultados; como mínimo 1.
         """
-        data = client.post(
-            "/api/predict", files={"image": sample_image_file}
-        ).json()
+        data = client.post("/api/predict", files={"image": sample_image_file}).json()
         assert isinstance(data["predictions"], list)
         assert len(data["predictions"]) >= 1
 
@@ -123,9 +121,7 @@ class TestResponseSchema:
         Cada elemento de 'predictions' debe tener los campos del contrato T05:
         category, category_key, score y team.
         """
-        data = client.post(
-            "/api/predict", files={"image": sample_image_file}
-        ).json()
+        data = client.post("/api/predict", files={"image": sample_image_file}).json()
         top = data["predictions"][0]
         for field in ("category", "category_key", "score", "team"):
             assert field in top, f"Campo faltante en prediction item: '{field}'"
@@ -134,18 +130,14 @@ class TestResponseSchema:
         self, client: TestClient, sample_image_file: tuple
     ) -> None:
         """La respuesta debe incluir un timestamp ISO de la clasificación."""
-        data = client.post(
-            "/api/predict", files={"image": sample_image_file}
-        ).json()
+        data = client.post("/api/predict", files={"image": sample_image_file}).json()
         assert "timestamp" in data and data["timestamp"]
 
     def test_response_has_model_info(
         self, client: TestClient, sample_image_file: tuple
     ) -> None:
         """La respuesta debe incluir la sección 'model' con metadatos del servicio."""
-        data = client.post(
-            "/api/predict", files={"image": sample_image_file}
-        ).json()
+        data = client.post("/api/predict", files={"image": sample_image_file}).json()
         assert "model" in data
         assert "min_confidence" in data["model"]
 
@@ -156,6 +148,7 @@ class TestResponseSchema:
             files={"image": ("test.jpg", _make_jpeg(), "image/jpeg")},
         )
         assert r.status_code == 200
+
 
 class TestScoreSemantics:
     """Verifica que el score y la señal de revisión humana sean coherentes."""
@@ -169,9 +162,7 @@ class TestScoreSemantics:
         Un valor fuera de este rango indicaría un error en la normalización
         de las salidas del clasificador.
         """
-        data = client.post(
-            "/api/predict", files={"image": sample_image_file}
-        ).json()
+        data = client.post("/api/predict", files={"image": sample_image_file}).json()
         score = data["predictions"][0]["score"]
         assert 0.0 <= score <= 1.0, f"Score fuera de rango: {score}"
 
@@ -184,9 +175,7 @@ class TestScoreSemantics:
         Si hay múltiples predicciones, deben estar ordenadas de mayor
         a menor confianza.
         """
-        data = client.post(
-            "/api/predict", files={"image": sample_image_file}
-        ).json()
+        data = client.post("/api/predict", files={"image": sample_image_file}).json()
         predictions = data["predictions"]
         if len(predictions) > 1:
             assert predictions[0]["score"] >= predictions[1]["score"]
