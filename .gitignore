@@ -254,3 +254,19 @@ fabric.properties
 # Ignore all local history of files
 .history
 .ionide
+
+Documents/
+Images/
+
+# Pesos del modelo y dataset (no subir al repositorio archivos grandes)
+models/*.pkl
+models/*.pt
+models/*.bin
+models/*/**
+data/raw/
+data/processed/
+data/test/
+models/embeddings_cache.npz
+
+### MLflow ###
+mlruns/

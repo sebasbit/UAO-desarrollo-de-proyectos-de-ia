@@ -1,13 +1,49 @@
-.venv/
+# Control de versiones
+.git
+.github
+.gitignore
+
+# Entorno virtual local (Docker crea el propio con uv sync)
+.venv
+.pixi
+
+# Cache de Python
 __pycache__/
-*.pyc
+*.py[cod]
 *.pyo
 *.pyd
-.git/
-.gitignore
+
+# IDEs y sistema operativo
 .vscode/
 .idea/
-pytest_cache/
-.mypy_cache/
 .DS_Store
 Thumbs.db
+.history/
+
+# Tests y herramientas de desarrollo (no van en la imagen de producción)
+tests/
+scripts/
+.pre-commit-config.yaml
+
+# Dataset e imágenes de entrenamiento (no necesarios en producción)
+data/
+dataset_triage_ti/
+
+# Artefactos de entrenamiento que no se usan en inferencia
+models/embeddings_cache.npz
+mlruns/
+
+# Documentación y materiales del curso
+Documents/
+Images/
+*.md
+
+# Variables de entorno locales
+.env
+.envrc
+
+# Cache de herramientas
+.ruff_cache/
+.mypy_cache/
+.pytest_cache/
+htmlcov/
