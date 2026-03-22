@@ -17,6 +17,7 @@ variables:
       paths:
         - $UV_CACHE_DIR
   before_script:
+    - apt-get update && apt-get install -y --no-install-recommends make
     - uv sync --locked --group dev
   after_script:
     - uv cache prune --ci
