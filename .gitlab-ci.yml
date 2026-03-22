@@ -1,0 +1,34 @@
+stages:
+  - test
+
+variables:
+  UV_VERSION: "0.10.9"
+  PYTHON_VERSION: "3.12"
+  BASE_LAYER: trixie-slim
+  UV_LINK_MODE: copy
+  UV_CACHE_DIR: .uv-cache
+
+.uv-install:
+  image: ghcr.io/astral-sh/uv:$UV_VERSION-python$PYTHON_VERSION-$BASE_LAYER
+  cache:
+    - key:
+        files:
+          - uv.lock
+      paths:
+        - $UV_CACHE_DIR
+  before_script:
+    - uv sync --locked --group dev
+  after_script:
+    - uv cache prune --ci
+
+tests:
+  extends: .uv-install
+  stage: test
+  script:
+    - make test
+
+linting:
+  extends: .uv-install
+  stage: test
+  script:
+    - make lint

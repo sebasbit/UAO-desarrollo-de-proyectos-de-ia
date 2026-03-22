@@ -23,10 +23,10 @@ grpc:
 	uv run python -m src.grpc.server
 
 test:
-	USE_DUMMY_MODEL=1 uv run pytest
+	USE_DUMMY_MODEL=1 uv run --locked --group dev pytest
 
 lint:
-	uv run ruff check src tests scripts main.py --exclude src/grpc/stubs
+	uv run --locked --group dev ruff check src tests scripts main.py --exclude src/grpc/stubs
 
 format:
 	uv run ruff format src tests scripts main.py --exclude src/grpc/stubs
