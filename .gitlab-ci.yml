@@ -7,12 +7,13 @@ variables:
   PYTHON_VERSION: "3.12"
   BASE_LAYER: trixie-slim
   UV_LINK_MODE: copy
-  UV_CACHE_DIR: .uv-cache
   IMAGEN_NAME: seb4sbit/soporte_ti
   IMAGE_TAG: $CI_COMMIT_SHORT_SHA
 
 .uv-install:
   image: ghcr.io/astral-sh/uv:$UV_VERSION-python$PYTHON_VERSION-$BASE_LAYER
+  variables:
+    UV_CACHE_DIR: .uv-cache
   cache:
     - key:
         files:
@@ -30,12 +31,20 @@ tests:
   stage: test
   script:
     - make test
+  rules:
+    - if: $CI_COMMIT_BRANCH == "feature/implementar-pipeline-de-ci-cd" # TODO: quitar antes de mezclar en main.
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+    - if: $CI_COMMIT_BRANCH == "main" || $CI_COMMIT_BRANCH == "develop"
 
 linting:
   extends: .uv-install
   stage: test
   script:
     - make lint
+  rules:
+    - if: $CI_COMMIT_BRANCH == "feature/implementar-pipeline-de-ci-cd" # TODO: quitar antes de mezclar en main.
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+    - if: $CI_COMMIT_BRANCH == "main" || $CI_COMMIT_BRANCH == "develop"
 
 build_image:
   stage: build
@@ -49,3 +58,7 @@ build_image:
   script:
     - docker build --build-arg MODEL_PATH=$MODEL_PATH -t $IMAGEN_NAME:$IMAGE_TAG .
     - docker push $IMAGEN_NAME:$IMAGE_TAG
+  only:
+  rules:
+    - if: $CI_COMMIT_BRANCH == "feature/implementar-pipeline-de-ci-cd" # TODO: quitar antes de mezclar en main.
+    - if: $CI_COMMIT_BRANCH == "main"
