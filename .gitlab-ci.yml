@@ -1,5 +1,6 @@
 stages:
   - test
+  - build
 
 variables:
   UV_VERSION: "0.10.9"
@@ -7,6 +8,8 @@ variables:
   BASE_LAYER: trixie-slim
   UV_LINK_MODE: copy
   UV_CACHE_DIR: .uv-cache
+  IMAGEN_NAME: seb4sbit/soporte_ti
+  IMAGE_TAG: $CI_COMMIT_SHORT_SHA
 
 .uv-install:
   image: ghcr.io/astral-sh/uv:$UV_VERSION-python$PYTHON_VERSION-$BASE_LAYER
@@ -33,3 +36,16 @@ linting:
   stage: test
   script:
     - make lint
+
+build_image:
+  stage: build
+  image: docker:29.3.0-cli
+  services:
+    - docker:29.3.0-dind
+  variables:
+    DOCKER_TLS_CERTDIR: "/certs"
+  before_script:
+    - echo "$REGISTRY_PASSWORD" | docker login -u "$REGISTRY_USER" --password-stdin
+  script:
+    - docker build --build-arg MODEL_PATH=$MODEL_PATH -t $IMAGEN_NAME:$IMAGE_TAG .
+    - docker push $IMAGEN_NAME:$IMAGE_TAG

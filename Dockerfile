@@ -3,6 +3,8 @@
 # por lo que el mismo Dockerfile funciona en Mac (Intel/Apple Silicon) y Windows.
 FROM python:3.12-slim
 
+ARG MODEL_PATH=models/classifier.pkl
+
 # Instalar uv
 COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
 
@@ -10,10 +12,11 @@ COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
 # .dockerignore excluye: .venv, data/, embeddings_cache.npz,
 # mlruns/, tests/, scripts/, .git, IDEs, *.md
 COPY . /app
+ADD ${MODEL_PATH} /app/models/classifier.pkl
 WORKDIR /app
 
 # Instalar dependencias de producción
-RUN uv sync --no-dev
+RUN uv sync --locked --no-dev
 
 # Variables de entorno
 ENV PATH="/app/.venv/bin:$PATH"
