@@ -1,6 +1,7 @@
 stages:
   - test
   - build
+  - deploy
 
 variables:
   UV_VERSION: "0.10.9"
@@ -58,7 +59,14 @@ build_image:
   script:
     - docker build --build-arg MODEL_PATH=$MODEL_PATH -t $IMAGEN_NAME:$IMAGE_TAG .
     - docker push $IMAGEN_NAME:$IMAGE_TAG
-  only:
+  rules:
+    - if: $CI_COMMIT_BRANCH == "feature/implementar-pipeline-de-ci-cd" # TODO: quitar antes de mezclar en main.
+    - if: $CI_COMMIT_BRANCH == "main"
+
+deploy_container: # TODO: implementar despliegue real.
+  stage: deploy
+  script:
+    - echo "Desplegando $IMAGEN_NAME:$IMAGE_TAG a producción..."
   rules:
     - if: $CI_COMMIT_BRANCH == "feature/implementar-pipeline-de-ci-cd" # TODO: quitar antes de mezclar en main.
     - if: $CI_COMMIT_BRANCH == "main"
